@@ -237,33 +237,15 @@ fig.savefig("./figures/parabola_vs_circle.pdf", bbox_inches='tight')
 plt.show()
 '''
 
+
 ########################################################################
 ########################################################################
-# Ronchi simulator
-
-
-lambdaFringe = 0.254 # [mm]
-
-def cosFringe(x, lambdaFringe=lambdaFringe):
-   ''' Fringe pattern on the grating
-   x: cartesian coordinate [mm]
-   lambdaFringe: period of the grating pattern [mm]
-   Centered on one dark fringe.
-   '''
-   return 0.5 * (1. - np.cos(2.*np.pi/lambdaFringe * x))
-
-def stepFringe(x, lambdaFringe=lambdaFringe):
-   ''' Fringe pattern on the grating
-   x: cartesian coordinate [mm]
-   lambdaFringe: period of the grating pattern [mm]
-   Centered on one dark fringe.
-   '''
-   return 1.*((x/lambdaFringe-0.25) % 1 <0.5) #-1.*(x/lambdaFringe % 1 >0.5)
+# "Spherical aberration" of the parabolic mirror
 
 
 def zIntercept(zS, r0, RcBest):
    '''Compute the height of the tip of the reflected cone, when
-   zS: height of the light source (LED) [mm] 
+   zS: height of the light source (LED) [mm]
    r0: the light reflects on the mirror annulus at radius r0
    RcBest: defines the parabolic mirror curve
    '''
@@ -290,7 +272,56 @@ def zIntercept(zS, r0, RcBest):
    result = z0 - r0 * v[1]/v[0]
    return result
 
+'''
+# Zones on the disk
+R0 = np.linspace(0., D/2., 101)
+# consider a light source at the center of the best Sphere
+zS = zCircCenter(RcBest)
+# computing the heights of the focus points for each zone
+f = lambda r0:  zIntercept(zS, r0, RcBest)
+ZFocus = np.array(map(f, R0))
 
+# Plot it!
+fig=plt.figure(0)
+ax=fig.add_subplot(111)
+#
+ax.plot(R0, ZFocus, 'b', label=r'Parabola')
+ax.axhline(zCircCenter(RcBest), label='Circle')
+#
+ax.legend(loc=2)
+ax.set_xlim((0., D/2.))
+ax.set_xlabel(r'Zone radius $r$ [mm]')
+ax.set_ylabel(r'Height of focus point [mm]')
+ax.set_title(r'Spherical aberration')
+#
+fig.savefig("./figures/spherical_aberration.pdf", bbox_inches='tight')
+fig.clf()
+#plt.show()
+'''
+
+
+########################################################################
+########################################################################
+# Ronchi simulator
+
+
+lambdaFringe = 0.254 # [mm]
+
+def cosFringe(x, lambdaFringe=lambdaFringe):
+   ''' Fringe pattern on the grating
+   x: cartesian coordinate [mm]
+   lambdaFringe: period of the grating pattern [mm]
+   Centered on one dark fringe.
+   '''
+   return 0.5 * (1. - np.cos(2.*np.pi/lambdaFringe * x))
+
+def stepFringe(x, lambdaFringe=lambdaFringe):
+   ''' Fringe pattern on the grating
+   x: cartesian coordinate [mm]
+   lambdaFringe: period of the grating pattern [mm]
+   Centered on one dark fringe.
+   '''
+   return 1.*((x/lambdaFringe-0.25) % 1 <0.5) #-1.*(x/lambdaFringe % 1 >0.5)
 
 
 def createImage(zS, zGrating, test='Ronchi', fringe=stepFringe, lambdaFringe=lambdaFringe, nX=2001):
@@ -355,9 +386,9 @@ def createImage(zS, zGrating, test='Ronchi', fringe=stepFringe, lambdaFringe=lam
    return xxEdges, yyEdges, image
 
 
-
-
-
+########################################################################
+########################################################################
+# Ronchi/Foucault: Single frame
 
 
 '''
@@ -406,7 +437,7 @@ plt.show()
 
 ########################################################################
 ########################################################################
-# Ronchi animation
+# Ronchi/Foucault: Animations
 
 
 # video parameters
