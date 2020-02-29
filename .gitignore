@@ -1,0 +1,6 @@
+# Mac OS generated files
+.DS_Store
+.DS_Store?
+
+*.pyc
+.ipynb_checkpoints/
