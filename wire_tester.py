@@ -566,7 +566,7 @@ CreateMovie(saveFrame, nFrames, fps, test='Wire', fixedLight=False, fringe=stepF
 
 from scipy.interpolate import UnivariateSpline
 import emcee
-import triangle
+import corner
 
 # Mirror zones to be measured
 R = D/2. * np.array([0.316, 0.548, 0.707, 0.837, 0.949])   # [mm]
@@ -606,14 +606,26 @@ def lnL(par):
 
 # number of parameters to vary
 ndim = 1 + len(R)
-nwalkers = 250
+nwalkers = 100
 
-# initial guess: array of shape (nwalkers, ndim)
-# guess the desired parabola
-p0 = np.concatenate(([zCircCenter(RcBest)], zPara(R, RcBest)))
-p0 = p0[None, :] * np.ones((nwalkers, ndim)) # [mm]
-# add some noise ~ micron
-p0 += 0.001 * np.random.rand(ndim * nwalkers).reshape((nwalkers, ndim)) # [mm]
+## initial guess: array of shape (nwalkers, ndim)
+## guess the desired parabola
+#p0 = np.concatenate(([zCircCenter(RcBest)], zPara(R, RcBest)))  # [mm]
+#p0 = p0[None, :] * np.ones((nwalkers, ndim)) # [mm]
+## add some noise ~ micron
+#p0 += 0.001 * np.random.rand(ndim * nwalkers).reshape((nwalkers, ndim)) # [mm]
+
+# Initial guess
+p0 = np.zeros((nwalkers, ndim)) # [mm]
+# guess for offset: center of the sphere
+p0[:,0] = zCircCenter(RcBest)
+# noise for offset: ~mm
+p0[:,0] += np.random.rand(nwalkers)
+# guess for mirror curve: desired parabola
+p0[:,1:] = zPara(R, RcBest)[None,:]  * np.ones((nwalkers, ndim-1))
+# noise for mirror curve: ~micron
+p0[:,1:] += 0.001 * np.random.rand(nwalkers * (ndim-1)).reshape((nwalkers, ndim-1))
+
 
 # get sampler instance
 sampler = emcee.EnsembleSampler(nwalkers, ndim, lnL)
@@ -631,6 +643,62 @@ sampler.run_mcmc(pos, 1000)
 print("Mean acceptance fraction: {0:.3f}"
       .format(np.mean(sampler.acceptance_fraction)))
 
+
+
+
+
+
+
+# get the best fit curve
+parMean = np.mean(sampler.flatchain, axis=0)
+# read parameters
+zOffset = parMean[0]  # overall offset of the measurements [mm]
+zMirror = parMean[1:] # height of the mirror at the spline nodes [mm]
+# get the mirror curve from parameters: height and derivative
+zSpline = UnivariateSpline(R, zMirror, k=3, s=0)
+
+# plot it
+RPlot = np.linspace(-D/2., D/2., 501)
+ZCirc = zCirc(RPlot, RcBest)
+ZPara = zPara(RPlot, RcBest)
+
+fig=plt.figure(1)
+ax=fig.add_subplot(111)
+#
+# Show tolerances for red, green and blue wavelengths:
+# should be wavelength/8 to reach the Rayleigh criterion for a miror,
+# and wavelength/4 for a lens
+tol = 8.
+ax.fill_between(RPlot*0.1, -800.e-3/tol, 800.e-3/tol, edgecolor=None, facecolor='r', alpha=0.2)
+ax.fill_between(RPlot*0.1, -600.e-3/tol, 600.e-3/tol, edgecolor=None, facecolor='g', alpha=0.2)
+ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor='b', alpha=0.2)
+#
+# Compare circle and parabola
+ax.plot(RPlot*0.1, 0.*RPlot, 'k--', label=r'Circle')
+ax.plot(RPlot*0.1, (ZPara - ZCirc)*1.e3, 'k', label=r'Parabola')
+ax.plot(RPlot*0.1, (zSpline(RPlot) - ZCirc)*1.e3, 'r', label=r'My mirror')
+#
+# Contact points
+ax.plot(np.array([-rContactBest, rContactBest])*0.1, [0., 0.], 'ko')
+#
+ax.legend(loc=2, fontsize='x-small')
+ax.set_xlabel(r'$r$ [cm]')
+ax.set_ylabel(r'$z_\text{Parabola} - z_\text{Circle}$ [$\mu$m]')
+#
+#fig.savefig("./figures/parabola_vs_circle.pdf", bbox_inches='tight')
+
+plt.show()
+
+
+
+
+
+
+
+
+
+
+'''
 # plot result
 for i in range(ndim):
    plt.figure()
@@ -639,10 +707,13 @@ for i in range(ndim):
 
 # make a triangle plot
 samples = sampler.chain[:, 50:, :].reshape((-1, ndim))
-fig = triangle.corner(samples, labels=["$m$", "$b$", "$\ln\,f$"],
-                      truths=[1., 3., Objective([1., 3.], 0.)])
+fig = corner.corner(samples)
 
 plt.show()
+'''
+
+
+
 
 '''
 def Objective(par, arg1):
