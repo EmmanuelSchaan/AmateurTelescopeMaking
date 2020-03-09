@@ -65,16 +65,6 @@ def zCirc(r, Rc):
    result -= np.sqrt(Rc**2 - r**2)
    return result
 
-def dzCirc(r, Rc):
-   """Slope for the circle.
-   Rc: circle radius [mm]
-   r: polar coordinate [mm]
-   Output: dz/dr [dimless]
-   """
-   result = 2. * r
-   result /= 2. * np.sqrt(Rc**2 - r**2)
-   return result
-
 
 def rContact(Rc):
    """Polar radius [mm] of the contact point between the circle and parabola.
@@ -574,121 +564,186 @@ CreateMovie(saveFrame, nFrames, fps, test='Wire', fixedLight=False, fringe=stepF
 ########################################################################
 # Wire test: infer surface accuracy
 
-#from scipy.interpolate import UnivariateSpline
-#import emcee
-#import corner
+from scipy.interpolate import UnivariateSpline
+import emcee
+import corner
 
 # Mirror zones to be measured
-RMeas = D/2. * np.array([0.316, 0.548, 0.707, 0.837, 0.949])   # [mm]
-nRMeas = len(RMeas)
-
-# Mirror zones for knots of the spline
-#RKnot = np.concatenate(([0.], RMeas, [D/2.]))
-#RKnot = 0.5 * (RKnot[:-1] + RKnot[1:])
-#nRKnot = len(RKnot)
-
-
-
-# Measured aberrations
+R = D/2. * np.array([0.316, 0.548, 0.707, 0.837, 0.949])   # [mm]
+nR = len(R)
 
 # Measured wire test offsets, and uncertainties
-dZWireMeas = - np.array([0.4 ,0.015, 0., -0.02, -0.4])   # [inches]
+#dZIntMeas = - np.array([0.4 ,0.015, 0., -0.02, -0.4])   # [inches]
 
 # test case, should correspond to circle
-#dZWireMeas = - np.array([0. ,0., 0., 0., 0.])   # [inches]
-#parTruth = np.zeros(6)
-
-# Uncertainties
-sdZWireMeas = 0.01 * np.ones_like(dZWireMeas)   # [inches]
+dZIntMeas = - np.array([0. ,0., 0., 0., 0.])   # [inches]
+parTruth = np.concatenate(([zCircCenter(RcBest)], zCirc(R, RcBest)))
 
 
+sdZIntMeas = 0.01 * np.ones_like(dZIntMeas)   # [inches]
 # convert to mm
-dZWireMeas *= inchToMm # [mm]
-sdZWireMeas *= inchToMm # [mm]
+dZIntMeas *= inchToMm # [mm]
+sdZIntMeas *= inchToMm # [mm]
 
 
 def lnL(par):
    # read parameters
-   zWireOffset = zCircCenter(RcBest) + par[0]  # overall offset of the measurements [mm]
-   dZMirror = dzCirc(RMeas, RcBest) + par[1:] # slope of the mirror at the spline nodes [mm]
+   zOffset = par[0]  # overall offset of the measurements [mm]
+   zMirror = par[1:] # height of the mirror at the spline nodes [mm]
+   
+   # get the mirror curve from parameters: height and derivative
+   zSpline = UnivariateSpline(R, zMirror-zPara(R, RcBest), k=3, s=0)
+   
+   print zMirror-zPara(R, RcBest)
+   
+   f = zSpline.derivative()
+   dzSpline = f(R) + dzPara(R, RcBest)
+   
+   print f(R), dzPara(R, RcBest)
+   
+   print zMirror.shape, dzSpline.shape
    
    lnl = 0.
    # for each measurement, compare measured and expected z offsets
    # of the source and wire (moving together)
-   for iRMeas in range(nRMeas):
-      result = zWireOffset + dZWireMeas[iRMeas]
-      result -= zIntercept(zWireOffset + dZWireMeas[iRMeas], # source position
-                           RMeas[iRMeas],   # mirror zone
+   for iR in range(len(R)):
+      result = zOffset + dZIntMeas[iR]
+      result -= zIntercept(zOffset + dZIntMeas[iR], # source position
+                           R[iR],   # mirror zone
                            0.,  # parameter not used here
-                           z0=zCirc(RMeas[iRMeas], RcBest),   # mirror height. Basically close enough for circle/parabola/my mirror.
-                           dz0=dZMirror[iRMeas]) # mirror height derivative
-      lnl -= 0.5 * result**2 / sdZWireMeas[iRMeas]**2
+                           z0=zMirror[iR],   # mirror height
+                           dz0=dzSpline[iR]) # mirror height derivative
+      lnl -= 0.5 * (result)**2 / sdZIntMeas[iR]**2
+   
+#   print lnl
+
    return lnl
 
 
-########################################################
-# Find the best fit offset and slopes
+# number of parameters to vary
+ndim = 1 + len(R)
+nwalkers = 24.  #100
 
-from scipy.optimize import minimize
+## initial guess: array of shape (nwalkers, ndim)
+## guess the desired parabola
+#p0 = np.concatenate(([zCircCenter(RcBest)], zPara(R, RcBest)))  # [mm]
+#p0 = p0[None, :] * np.ones((nwalkers, ndim)) # [mm]
+## add some noise ~ micron
+#p0 += 0.001 * np.random.rand(ndim * nwalkers).reshape((nwalkers, ndim)) # [mm]
 
-x0 = np.zeros(1+nRMeas)
-#x0 = np.random.normal(loc=0., scale=1.e-6,size=1+nRMeas)
-res = minimize(lambda par: -lnL(par), x0, method='Nelder-Mead', tol=1e-8)
+# Initial guess
+p0 = np.zeros((nwalkers, ndim)) # [mm]
+# guess for offset: center of the sphere
+p0[:,0] = zCircCenter(RcBest)
+# noise for offset: ~mm
+s = 0.1
+print "initial noise for meas offset", s
+p0[:,0] += s * np.random.normal(loc=0., scale=1., size=nwalkers)
+# guess for mirror curve: desired parabola
+p0[:,1:] = zPara(R, RcBest)[None,:]  * np.ones((nwalkers, ndim-1))
+# noise for mirror curve: ~0.1 micron
+s = 0.0001
+print "initial noise for mirror curve", s
+p0[:,1:] += s * np.random.normal(loc=0., scale=1.,size=nwalkers*(ndim-1)).reshape((nwalkers, ndim-1))
 
-print res.x
 
-zOffset = zCircCenter(RcBest) + res.x[0]
-dzMirrorVsCirc = res.x[1:]
+# get sampler instance
+sampler = emcee.EnsembleSampler(nwalkers, ndim, lnL)
+
+print "Burn in"
+# let the walker run a bit on their own...
+pos, prob, state = sampler.run_mcmc(p0, 100)
+sampler.reset()
+
+# do the MCMC sampling
+print "MCMC sampling"
+sampler.run_mcmc(pos, 1000)
+
+# check that the process went well: acceptance fraction between 0.25 and 0.5 (?)
+print("Mean acceptance fraction: {0:.3f}"
+      .format(np.mean(sampler.acceptance_fraction)))
 
 
-########################################################
-# plot offset to sphere, and compare with parabola
-
-# !!!test: pretend we got the correct slopes for the parabola
-dzMirrorVsCirc = dzPara(RMeas, RcBest) - dzCirc(RMeas, RcBest)
 
 
-# integrate the mirror slopes to get mirror curve
-#RPlot = np.concatenate(([0.], RMeas, [D/2.]))
-RPlot = np.concatenate(([0.3*D/2.], RMeas, [0.96*D/2.]))
-print RMeas / (D/2.)
-print RPlot / (D/2.)
-RPlot = 0.5*(RPlot[:-1] + RPlot[1:])
-print RPlot / (D/2.)
 
-zMirrorVSCirc = np.zeros_like(RPlot)
-for i in range(len(RMeas)):
-   zMirrorVSCirc[i+1] = zMirrorVSCirc[i]
-   zMirrorVSCirc[i+1] += dzMirrorVsCirc[i] * (RPlot[i+1] - RPlot[i])
 
-# find the offset of the curve that makes it closest to parabola
 
-def offsetLoss(offset):
-   result = zMirrorVSCirc.copy() + offset
-   result -= zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)
-   result = np.sum(result**2)
-   return result
-   
-res = minimize(offsetLoss, 0., method='Nelder-Mead', tol=1e-8)
+# get the best fit curve
+parMean = np.mean(sampler.flatchain, axis=0)
+# read parameters
+zOffset = parMean[0]  # overall offset of the measurements [mm]
+zMirror = parMean[1:] # height of the mirror at the spline nodes [mm]
+# get the mirror curve from parameters: height and derivative
+zSpline = UnivariateSpline(R, zMirror, k=3, s=0)
 
-offset = res.x[0]
+# plot it
+RPlot = np.linspace(-D/2., D/2., 501)
+ZCirc = zCirc(RPlot, RcBest)
+ZPara = zPara(RPlot, RcBest)
 
-#for i in range(len(RMeas))[::-1]:
-#   zMirrorVSCirc[i] = zMirrorVSCirc[i+1]
-#   zMirrorVSCirc[i] -= dzMirrorVsCirc[i] * (RPlot[i+1] - RPlot[i])
-   
+fig=plt.figure(1)
+ax=fig.add_subplot(111)
+#
+# Show tolerances for red, green and blue wavelengths:
+# should be wavelength/8 to reach the Rayleigh criterion for a miror,
+# and wavelength/4 for a lens
+tol = 8.
+ax.fill_between(RPlot*0.1, -800.e-3/tol, 800.e-3/tol, edgecolor=None, facecolor='r', alpha=0.2)
+ax.fill_between(RPlot*0.1, -600.e-3/tol, 600.e-3/tol, edgecolor=None, facecolor='g', alpha=0.2)
+ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor='b', alpha=0.2)
+#
+# Compare circle and parabola
+ax.plot(RPlot*0.1, 0.*RPlot, 'k--', label=r'Circle')
+ax.plot(RPlot*0.1, (ZPara - ZCirc)*1.e3, 'k', label=r'Parabola')
+ax.plot(RPlot*0.1, (zSpline(np.abs(RPlot)) - ZCirc)*1.e3, 'r', label=r'My mirror')
+#
+# Measurement points
+ax.plot(R*0.1, (zSpline(np.abs(R)) - zCirc(R, RcBest))*1.e3, 'ro')
+#
+# Contact points
+ax.plot(np.array([-rContactBest, rContactBest])*0.1, [0., 0.], 'ko')
+#
+ax.legend(loc=2, fontsize='x-small')
+ax.set_xlabel(r'$r$ [cm]')
+ax.set_ylabel(r'$z_\text{Parabola} - z_\text{Circle}$ [$\mu$m]')
+#
+#fig.savefig("./figures/parabola_vs_circle.pdf", bbox_inches='tight')
 
-plt.plot(RPlot, zMirrorVSCirc + offset, 'b', label=r'measured')
-plt.plot(RPlot, zPara(RPlot, RcBest) - zCirc(RPlot, RcBest), 'k--', label=r'parabola')
-plt.plot(RPlot, 0. * RPlot, 'k-', label=r'circle')
-plt.plot(RMeas, 0.*RMeas, 'go')
-#plt.plot(RPlot, 0.*RPlot, 'ro')
-plt.legend(loc=1)
+plt.show()
+
+
+
+# check the chain convergence
+fig=plt.figure(10)
+ax=fig.add_subplot(111)
+#
+for i in range(ndim):
+   x = sampler.flatchain[:,i].copy()
+   print "best fit", i, np.mean(x)
+   x -= np.mean(x)
+   x /= np.std(x)
+   ax.plot(x, label=str(i))
+ax.legend(loc=1)
+#
 plt.show()
 
 
 
 
+'''
+# plot result
+for i in range(ndim):
+   plt.figure()
+   plt.hist(sampler.flatchain[:,i], 100, color="k", histtype="step")
+   plt.title("Dimension {0:d}".format(i))
+
+# make a triangle plot
+samples = sampler.chain[:, 50:, :].reshape((-1, ndim))
+fig = corner.corner(samples)
+
+plt.show()
+'''
 
 
 
@@ -702,260 +757,46 @@ plt.show()
 
 
 
-## number of parameters to vary
-#ndim = 1 + len(RMeas)
-#nwalkers = 2 * ndim  #100
-#
-## Initial guess
-#p0 = np.zeros((nwalkers, ndim)) # [mm]
-## guess for offset: center of the sphere
-##p0[:,0] = 0.#zCircCenter(RcBest)
-## noise for offset: ~mm
-#s = 1.e-3
-#print "initial noise for meas offset", s
-#p0[:,0] += s * np.random.normal(loc=0., scale=1., size=nwalkers)
-## guess for mirror curve: desired parabola
-##p0[:,1:] = dzCirc(RMeas, RcBest)[None,:]  * np.ones((nwalkers, ndim-1))
-## noise for mirror curve: ~0.1 micron
-#s = 1.e-7
-#print "initial noise for mirror curve", s
-#p0[:,1:] += s * np.random.normal(loc=0., scale=1.,size=nwalkers*(ndim-1)).reshape((nwalkers, ndim-1))
-#
-#
-## get sampler instance
-#sampler = emcee.EnsembleSampler(nwalkers, ndim, lnL)
-#
-#print "Burn in"
-## let the walker run a bit on their own...
-#pos, prob, state = sampler.run_mcmc(p0, 1000)
-#sampler.reset()
-#
-## do the MCMC sampling
-#print "MCMC sampling"
-#sampler.run_mcmc(pos, 10000)
-#
-## check that the process went well: acceptance fraction between 0.25 and 0.5 (?)
-#print("Mean acceptance fraction: {0:.3f}"
-#      .format(np.mean(sampler.acceptance_fraction)))
-#
-##print(
-##    "Mean autocorrelation time: {0:.3f} steps".format(
-##        np.mean(sampler.get_autocorr_time())
-##    )
-##)
-#
-#
-## print best fit
-#for i in range(ndim):
-#   x = sampler.flatchain[:,i].copy()
-#   print "best fit", i, np.mean(x)#, dzCirc(RMeas[i], RcBest)
-#
-## check the chain convergence
-#fig=plt.figure(10)
-#ax=fig.add_subplot(111)
-##
-#for i in range(1,ndim):
-#   x = sampler.flatchain[:,i].copy()
-##   print "best fit", i, np.mean(x)
-##   x -= np.mean(x)
-##   x /= np.std(x)
-#   ax.plot(x, label=str(i))
-#ax.legend(loc=1)
-##
-#plt.show()
-#
-#
-#
-#
-#
-#
-#
-#
-#
-## get the best fit curve
-##parMean = np.mean(sampler.flatchain, axis=0)
-### read parameters
-##zOffset = parMean[0]  # overall offset of the measurements [mm]
-##zKnot = parMean[1:] # height of the mirror at the spline nodes [mm]
-### get the mirror curve from parameters: height and derivative
-##x = np.concatenate((RKnot, [D/2.]))
-##z = np.concatenate((zKnot, [0.]))
-##
-##
-##zSpline = UnivariateSpline(x, z, k=1, s=0)
-##dzSpline = zSpline.derivative()
-#
-##from scipy.interpolate import interp1d
-##zSpline = interp1d(x, z, kind='linear', bounds_error=False, fill_value='extrapolate')
-##dzSpline = np.diff(z) / np.diff(x)
-#
-#
-## plot it
-#RPlot = np.linspace(-D/2., D/2., 501)
-#ZCirc = zCirc(RPlot, RcBest)
-#ZPara = zPara(RPlot, RcBest)
-#
-#
-#
-#
-#
-#
-#
-#
-##fig=plt.figure(0)
-##ax=fig.add_subplot(111)
-###
-### Compare circle and parabola
-##ax.plot(RPlot*0.1, ZCirc, 'k--', label=r'Circle')
-##ax.plot(RPlot*0.1, ZPara, 'k', label=r'Parabola')
-##ax.plot(RPlot*0.1, zSpline(np.abs(RPlot)), 'r', label=r'My mirror')
-###
-### Measurement points
-##ax.plot(RMeas*0.1, zSpline(np.abs(RMeas)), 'ro')
-###
-##ax.legend(loc=2, fontsize='x-small')
-##ax.set_xlabel(r'$r$ [cm]')
-##ax.set_ylabel(r'$z_\text{Parabola}$ [mm]')
-###
-###fig.savefig("./figures/parabola_vs_circle.pdf", bbox_inches='tight')
-##
-##plt.show()
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#fig=plt.figure(1)
-#ax=fig.add_subplot(111)
-##
-## Show tolerances for red, green and blue wavelengths:
-## should be wavelength/8 to reach the Rayleigh criterion for a miror,
-## and wavelength/4 for a lens
-#tol = 8.
-#ax.fill_between(RPlot*0.1, -800.e-3/tol, 800.e-3/tol, edgecolor=None, facecolor='r', alpha=0.2)
-#ax.fill_between(RPlot*0.1, -600.e-3/tol, 600.e-3/tol, edgecolor=None, facecolor='g', alpha=0.2)
-#ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor='b', alpha=0.2)
-##
-## Compare circle and parabola
-#ax.plot(RPlot*0.1, 0.*RPlot, 'k--', label=r'Circle')
-#ax.plot(RPlot*0.1, (ZPara - ZCirc)*1.e3, 'k', label=r'Parabola')
-#ax.plot(RPlot*0.1, (zSpline(np.abs(RPlot)) - zCirc(RPlot, RcBest))*1.e3, 'r', label=r'My mirror')
-##
-## Measurement points
-#ax.plot(RMeas*0.1, (zSpline(np.abs(RMeas)) - zCirc(RMeas, RcBest))*1.e3, 'ro')
-##
-## Contact points
-#ax.plot(np.array([-rContactBest, rContactBest])*0.1, [0., 0.], 'ko')
-##
-#ax.legend(loc=2, fontsize='x-small')
-#ax.set_xlabel(r'$r$ [cm]')
-#ax.set_ylabel(r'$z_\text{Parabola} - z_\text{Circle}$ [$\mu$m]')
-##
-##fig.savefig("./figures/parabola_vs_circle.pdf", bbox_inches='tight')
-#
-#plt.show()
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-## check the chain convergence
-#fig=plt.figure(10)
-#ax=fig.add_subplot(111)
-##
-#for i in range(ndim):
-#   x = sampler.flatchain[:,i].copy()
-#   print "best fit", i, np.mean(x)
-#   x -= np.mean(x)
-#   x /= np.std(x)
-#   ax.plot(x, label=str(i))
-#ax.legend(loc=1)
-##
-#plt.show()
-#
-#
-#
-#
-#'''
-## plot result
-#for i in range(ndim):
-#   plt.figure()
-#   plt.hist(sampler.flatchain[:,i], 100, color="k", histtype="step")
-#   plt.title("Dimension {0:d}".format(i))
-#
-## make a triangle plot
-#samples = sampler.chain[:, 50:, :].reshape((-1, ndim))
-#fig = corner.corner(samples)
-#
-#plt.show()
-#'''
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#
-#'''
-#def Objective(par, arg1):
-#   a = par[0]
-#   b = par[1]
-#   f =  - (a-1.)**2. / 3.  - (b-3.)**2./4.  + arg1
-#   return f
-#
-#
-#ndim = 2 # nb of variables
-#nwalkers = 250 # nb of points for sampling
-#
-## initial guess: array of shape (nwalkers, ndim)
-#p0 = np.random.rand(ndim * nwalkers).reshape((nwalkers, ndim))
-#
-## get sampler instance
-#sampler = emcee.EnsembleSampler(nwalkers, ndim, Objective, args=[0.])
-#
-## let the walker run a bit on their own...
-#pos, prob, state = sampler.run_mcmc(p0, 100)
-#sampler.reset()
-#
-## do the MCMC sampling
-#sampler.run_mcmc(pos, 1000)
-#
-## check that the process went well: acceptance fraction between 0.25 and 0.5 (?)
-#print("Mean acceptance fraction: {0:.3f}"
-#      .format(np.mean(sampler.acceptance_fraction)))
-#
-## plot result
-#for i in range(ndim):
-#   plt.figure()
-#   plt.hist(sampler.flatchain[:,i], 100, color="k", histtype="step")
-#   plt.title("Dimension {0:d}".format(i))
-#
-#
-## make a triangle plot
-#samples = sampler.chain[:, 50:, :].reshape((-1, ndim))
-#fig = triangle.corner(samples, labels=["$m$", "$b$", "$\ln\,f$"],
-#                      truths=[1., 3., Objective([1., 3.], 0.)])
-#
-#plt.show()
-#'''
-#
+'''
+def Objective(par, arg1):
+   a = par[0]
+   b = par[1]
+   f =  - (a-1.)**2. / 3.  - (b-3.)**2./4.  + arg1
+   return f
+
+
+ndim = 2 # nb of variables
+nwalkers = 250 # nb of points for sampling
+
+# initial guess: array of shape (nwalkers, ndim)
+p0 = np.random.rand(ndim * nwalkers).reshape((nwalkers, ndim))
+
+# get sampler instance
+sampler = emcee.EnsembleSampler(nwalkers, ndim, Objective, args=[0.])
+
+# let the walker run a bit on their own...
+pos, prob, state = sampler.run_mcmc(p0, 100)
+sampler.reset()
+
+# do the MCMC sampling
+sampler.run_mcmc(pos, 1000)
+
+# check that the process went well: acceptance fraction between 0.25 and 0.5 (?)
+print("Mean acceptance fraction: {0:.3f}"
+      .format(np.mean(sampler.acceptance_fraction)))
+
+# plot result
+for i in range(ndim):
+   plt.figure()
+   plt.hist(sampler.flatchain[:,i], 100, color="k", histtype="step")
+   plt.title("Dimension {0:d}".format(i))
+
+
+# make a triangle plot
+samples = sampler.chain[:, 50:, :].reshape((-1, ndim))
+fig = triangle.corner(samples, labels=["$m$", "$b$", "$\ln\,f$"],
+                      truths=[1., 3., Objective([1., 3.], 0.)])
+
+plt.show()
+'''
+
