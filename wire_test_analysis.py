@@ -592,7 +592,8 @@ nRMeas = len(RMeas)
 # Measured aberrations
 
 # Measured wire test offsets, and uncertainties
-dZWireMeas = - np.array([0.4 ,0.015, 0., -0.02, -0.4])   # [inches]
+#dZWireMeas = - np.array([0.4 ,0.015, 0., -0.02, -0.4])   # [inches]
+dZWireMeas = - np.array([0.04 ,0.015, 0., -0.02, -0.04])   # [inches]
 
 # test case, should correspond to circle
 #dZWireMeas = - np.array([0. ,0., 0., 0., 0.])   # [inches]
@@ -605,6 +606,10 @@ sdZWireMeas = 0.01 * np.ones_like(dZWireMeas)   # [inches]
 # convert to mm
 dZWireMeas *= inchToMm # [mm]
 sdZWireMeas *= inchToMm # [mm]
+
+# Expected result for a perfect parabola?
+#dZWireMeas = np.linspace(0., 2. * (D/2.)**2/RcBest, 5)
+#dZWireMeas = np.linspace(0., 10., 5)
 
 
 def lnL(par):
@@ -645,7 +650,7 @@ dzMirrorVsCirc = res.x[1:]
 # plot offset to sphere, and compare with parabola
 
 # !!!test: pretend we got the correct slopes for the parabola
-dzMirrorVsCirc = dzPara(RMeas, RcBest) - dzCirc(RMeas, RcBest)
+#dzMirrorVsCirc = dzPara(RMeas, RcBest) - dzCirc(RMeas, RcBest)
 
 
 # integrate the mirror slopes to get mirror curve
