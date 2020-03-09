@@ -274,7 +274,7 @@ def zIntercept(zS, r0, RcBest):
 
 '''
 # Zones on the disk
-R0 = np.linspace(0., D/2., 101)
+R0 = np.linspace(1.e-5*D/2., D/2., 101)
 # consider a light source at the center of the best Sphere
 zS = zCircCenter(RcBest)
 # computing the heights of the focus points for each zone
@@ -295,8 +295,8 @@ ax.set_ylabel(r'Height of focus point [mm]')
 ax.set_title(r'Spherical aberration')
 #
 fig.savefig("./figures/spherical_aberration.pdf", bbox_inches='tight')
-fig.clf()
-#plt.show()
+#fig.clf()
+plt.show()
 '''
 
 
