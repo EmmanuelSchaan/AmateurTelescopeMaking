@@ -620,7 +620,7 @@ def lnL(par):
    '''
    # read parameters
    zWireOffset = zCircCenter(RcBest) + par[0]  # overall offset of the measurements [mm]
-   dZMirror = dzPara(RMeas, RcBest) + par[1:] # slope of the mirror at the spline nodes [mm]
+   dZMirror = dzCirc(RMeas, RcBest) + par[1:] # slope of the mirror at the spline nodes [mm]
    
    lnl = 0.
    # for each measurement, compare measured and expected z offsets
@@ -643,29 +643,27 @@ res = optimize.minimize(lambda par: -lnL(par), x0, method='Nelder-Mead', tol=1e-
 
 # Extract the best fit parameters
 zOffset = zCircCenter(RcBest) + res.x[0]
-dzMirrorVsPara = res.x[1:]
+dzMirrorVsCirc = res.x[1:]
 
 # !!!test: pretend we got the correct slopes for the parabola
-#dzMirrorVsPara = 0. * dzPara(RMeas, RcBest)
+#dzMirrorVsCirc = dzPara(RMeas, RcBest) - dzCirc(RMeas, RcBest)
 
 
 ########################################################################
 # Approximate inference of the mirror slope from the wire test
 # a la Jean Texereau
 '''
-# expected wire test positions,
-# when the source is moving (factor 2 wrt Texereau)
-dZWirePara = 0.5 * RMeas**2 / RcBest
-dZWirePara -= np.mean(dZWirePara)
+# expected wire test positions
+dZWirePara = Rmeas**2 / RcBest
 
 # longitudinal aberration at the center of circle
-LambdaC = dZWirePara - dZWireMeas
+LambdaC = dZWireMeas - dZWirePara
 # longitudinal aberration at the focal point
-LambdaF = LambdaC / 4.
+LambdaF = LambdaC / 2.
 # transverse aberration at the focal point
 lambdaF = LambdaF * RMeas / lf
 # slope with respect to parabola
-dzMirrorVsPara = 0.5*lambdaF / lf
+dzMirrorVsPara = lambdaF / lf
 
 # Danjon & Couder criterion 1:
 # the geometric transverse aberration should be less than the diffraction
@@ -674,22 +672,22 @@ dzMirrorVsPara = 0.5*lambdaF / lf
 '''
 
 ########################################################################
-# Compute surface deviation from parabola parabola
+# Compute offset to sphere, and compare with parabola
 
 # Zones at which the mirror heights will be computed
 RPlot = np.concatenate(([0.], RMeas, [D/2.]))
 RPlot = 0.5*(RPlot[:-1] + RPlot[1:])
 
 # integrate the mirror slopes to get mirror curve
-zMirrorVSPara = np.zeros_like(RPlot)
+zMirrorVSCirc = np.zeros_like(RPlot)
 for i in range(len(RMeas)):
-   zMirrorVSPara[i+1] = zMirrorVSPara[i]
-   zMirrorVSPara[i+1] += dzMirrorVsPara[i] * (RPlot[i+1] - RPlot[i])
+   zMirrorVSCirc[i+1] = zMirrorVSCirc[i]
+   zMirrorVSCirc[i+1] += dzMirrorVsCirc[i] * (RPlot[i+1] - RPlot[i])
 
 # find the offset of the curve that makes it closest to parabola
 def offsetLoss(offset):
-   result = zMirrorVSPara.copy() + offset
-#   result -= zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)
+   result = zMirrorVSCirc.copy() + offset
+   result -= zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)
    result = np.sum(result**2)
    return result
 res = optimize.minimize(offsetLoss, 0., method='Nelder-Mead', tol=1e-8)
@@ -698,32 +696,6 @@ offset = res.x[0]
 
 ########################################################################
 # Plot measured surface, compared with circle and parabola
-
-fig=plt.figure(0)
-ax=fig.add_subplot(111)
-#
-# Show tolerances for red, green and blue wavelengths:
-# should be wavelength/8 to reach the Rayleigh criterion for a miror,
-# and wavelength/4 for a lens
-tol = 8.
-ax.fill_between(RPlot*0.1, -800.e-3/tol, 800.e-3/tol, edgecolor=None, facecolor='r', alpha=0.2)
-ax.fill_between(RPlot*0.1, -600.e-3/tol, 600.e-3/tol, edgecolor=None, facecolor='g', alpha=0.2)
-ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor='b', alpha=0.2)
-#
-# Compare circle, parabola and measured profile
-ax.plot(RPlot*0.1, 1.e3 * (zCirc(RPlot, RcBest) - zPara(RPlot, RcBest)), 'k-', label=r'Circle')
-ax.plot(RPlot*0.1, 0. * RPlot, 'k--', label=r'Parabola')
-ax.plot(RPlot*0.1, 1.e3 * (zMirrorVSPara + offset), 'b', label=r'measured')
-#
-ax.plot(RMeas*0.1, 0.*RMeas, 'go')
-#
-ax.legend(loc='upper center', fontsize='x-small', labelspacing=0)
-ax.set_xlabel(r'$r$ [cm]')
-ax.set_ylabel(r'$z - z_\text{Parabola}$ [$\mu$m]')
-ax.set_title(r'Wire test analysis '+testRef)
-#
-fig.savefig("./figures/wire_test_vs_parabola_"+testRef+".pdf", bbox_inches='tight')
-
 
 fig=plt.figure(1)
 ax=fig.add_subplot(111)
@@ -739,7 +711,7 @@ ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor=
 # Compare circle, parabola and measured profile
 ax.plot(RPlot*0.1, 0. * RPlot, 'k-', label=r'Circle')
 ax.plot(RPlot*0.1, 1.e3 * (zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), 'k--', label=r'Parabola')
-ax.plot(RPlot*0.1, 1.e3 * (zMirrorVSPara + offset + zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), 'b', label=r'measured')
+ax.plot(RPlot*0.1, 1.e3 * (zMirrorVSCirc + offset), 'b', label=r'measured')
 #
 ax.plot(RMeas*0.1, 0.*RMeas, 'go')
 #
@@ -748,8 +720,7 @@ ax.set_xlabel(r'$r$ [cm]')
 ax.set_ylabel(r'$z - z_\text{Circle}$ [$\mu$m]')
 ax.set_title(r'Wire test analysis '+testRef)
 #
-fig.savefig("./figures/wire_test_vs_circle_"+testRef+".pdf", bbox_inches='tight')
-
+fig.savefig("./figures/wire_test_result_"+testRef+".pdf", bbox_inches='tight')
 
 plt.show()
 
