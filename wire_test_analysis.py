@@ -584,6 +584,10 @@ CreateMovie(saveFrame, nFrames, fps, test='Wire', fixedLight=False, fringe=stepF
 testRef = "20200306"
 dZWireMeas = - np.array([0.04 ,0.015, 0., -0.02, -0.04])   # [inches]
 
+## 2020/03/13
+#testRef = "20200313"
+#dZWireMeas = - np.array([])   # [inches]
+
 
 ########################################################################
 
@@ -687,18 +691,51 @@ ax.axhline(0.)
 ax.plot(RMeas*0.1, dZWirePara, 'k--', label=r'Expected')
 ax.plot(RMeas*0.1, dZWireMeas, 'b', label=r'Measured')
 #
+# Allowed region to keep the geometric aberration
+# below the diffraction aberration
+# Airy disk radius = 1.22 * lambda / D * lf
+diffraction = 1.22*800.e-6/D*lf**2/RMeas*4.
+ax.fill_between(RMeas*0.1, -diffraction+dZWirePara, diffraction+dZWirePara, edgecolor=None, facecolor='r', alpha=0.2)
+diffraction = 1.22*600.e-6/D*lf**2/RMeas*4.
+ax.fill_between(RMeas*0.1, -diffraction+dZWirePara, diffraction+dZWirePara, edgecolor=None, facecolor='g', alpha=0.2)
+diffraction = 1.22*400.e-6/D*lf**2/RMeas*4.
+ax.fill_between(RMeas*0.1, -diffraction+dZWirePara, diffraction+dZWirePara, edgecolor=None, facecolor='b', alpha=0.2, label=r'Diffraction')
+#
 ax.legend(loc=2, fontsize='x-small', labelspacing=0.)
 ax.set_xlabel(r'$r$ [cm]')
 ax.set_ylabel(r'$z_\text{wire}$ [mm]')
 ax.set_title(r'Wire test positions'+ '\n'+r' (comoving source \& wire)')
+#
+fig.savefig("./figures/wiretest_positions_"+testRef+".pdf", bbox_inches='tight')
 
 plt.show()
 
 
+# Longitudinal aberration at focal point
+fig=plt.figure(0)
+ax=fig.add_subplot(111)
+#
+ax.axhline(0.)
+ax.plot(RMeas*0.1, LambdaF*1.e3, 'b', label=r'Geometric (measured)')
+#
+# Compare with aberration from diffraction
+# Airy disk radius = 1.22 * lambda / D * lf
+ax.fill_between(RMeas*0.1, -1.22*800.e-3/D*lf**2/RMeas, 1.22*800.e-3/D*lf**2/RMeas, edgecolor=None, facecolor='r', alpha=0.2)
+ax.fill_between(RMeas*0.1, -1.22*600.e-3/D*lf**2/RMeas, 1.22*600.e-3/D*lf**2/RMeas, edgecolor=None, facecolor='g', alpha=0.2)
+ax.fill_between(RMeas*0.1, -1.22*400.e-3/D*lf**2/RMeas, 1.22*400.e-3/D*lf**2/RMeas, edgecolor=None, facecolor='b', alpha=0.2, label=r'Diffraction')
+#
+ax.legend(loc=1, fontsize='x-small', labelspacing=0.)
+ax.set_xlabel(r'$r$ [cm]')
+ax.set_ylabel(r'Longitudinal aberration'+'\n'+r'at focal point [$\mu$m]')
+#
+fig.savefig("./figures/wiretest_longitudinal_aberration_"+testRef+".pdf", bbox_inches='tight')
+
+plt.show()
+
+
+# Transverse aberration at focal point
 # Danjon & Couder criterion 1:
 # the geometric transverse aberration should be less than the diffraction
-# Airy disk
-# lambdaF <= 1.22 * lambda / D * lf
 fig=plt.figure(0)
 ax=fig.add_subplot(111)
 #
@@ -707,17 +744,20 @@ ax.axhline(0.)
 # Transverse aberration: geometric
 result = lambdaF - 0.5*(np.min(lambdaF) + np.max(lambdaF))
 result *= 1.e3 # convert to microns
-ax.plot(RMeas*0.1, result, 'b', label=r'Geometric (my mirror)')
+ax.plot(RMeas*0.1, result, 'b', label=r'Geometric (measured)')
 #
-# Transverse aberration: diffraction
+# Compare with aberration from diffraction
 # Airy disk radius = 1.22 * lambda / D * lf
 ax.fill_between(RMeas*0.1, -1.22*800.e-3/D*lf, 1.22*800.e-3/D*lf, edgecolor=None, facecolor='r', alpha=0.2)
 ax.fill_between(RMeas*0.1, -1.22*600.e-3/D*lf, 1.22*600.e-3/D*lf, edgecolor=None, facecolor='g', alpha=0.2)
 ax.fill_between(RMeas*0.1, -1.22*400.e-3/D*lf, 1.22*400.e-3/D*lf, edgecolor=None, facecolor='b', alpha=0.2, label=r'Diffraction')
 #
+ax.legend(loc=2, fontsize='x-small', labelspacing=0.)
 ax.set_xlabel(r'$r$ [cm]')
 ax.set_ylabel(r'Transverse aberration'+'\n'+r'at focal point [$\mu$m]')
 ax.set_title(r'Danjon \& Couder criterion 1' + '\n' + r'Geometric VS diffraction spot')
+#
+fig.savefig("./figures/wiretest_transverse_aberration_"+testRef+".pdf", bbox_inches='tight')
 
 plt.show()
 
@@ -768,7 +808,7 @@ ax=fig.add_subplot(111)
 tol = 8.
 ax.fill_between(RPlot*0.1, -800.e-3/tol, 800.e-3/tol, edgecolor=None, facecolor='r', alpha=0.2)
 ax.fill_between(RPlot*0.1, -600.e-3/tol, 600.e-3/tol, edgecolor=None, facecolor='g', alpha=0.2)
-ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor='b', alpha=0.2)
+ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor='b', alpha=0.2, label=r'$1/8$-wave')
 #
 # Compare circle, parabola and measured profile
 ax.plot(RPlot*0.1, 1.e3 * (zCirc(RPlot, RcBest) - zPara(RPlot, RcBest)), 'k--', label=r'Circle')
@@ -783,7 +823,7 @@ ax.set_xlabel(r'$r$ [cm]')
 ax.set_ylabel(r'$z - z_\text{Parabola}$ [$\mu$m]')
 ax.set_title(r'Wire test analysis '+testRef)
 #
-fig.savefig("./figures/wire_test_vs_parabola_"+testRef+".pdf", bbox_inches='tight')
+fig.savefig("./figures/wiretest_mirror_vs_parabola_"+testRef+".pdf", bbox_inches='tight')
 
 
 fig=plt.figure(1)
@@ -795,7 +835,7 @@ ax=fig.add_subplot(111)
 tol = 8.
 ax.fill_between(RPlot*0.1, -800.e-3/tol, 800.e-3/tol, edgecolor=None, facecolor='r', alpha=0.2)
 ax.fill_between(RPlot*0.1, -600.e-3/tol, 600.e-3/tol, edgecolor=None, facecolor='g', alpha=0.2)
-ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor='b', alpha=0.2)
+ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor='b', alpha=0.2, label=r'$1/8$-wave')
 #
 # Compare circle, parabola and measured profile
 ax.plot(RPlot*0.1, 0. * RPlot, 'k--', label=r'Circle')
@@ -810,7 +850,7 @@ ax.set_xlabel(r'$r$ [cm]')
 ax.set_ylabel(r'$z - z_\text{Circle}$ [$\mu$m]')
 ax.set_title(r'Wire test analysis '+testRef)
 #
-fig.savefig("./figures/wire_test_vs_circle_"+testRef+".pdf", bbox_inches='tight')
+fig.savefig("./figures/wiretest_mirror_vs_circle_"+testRef+".pdf", bbox_inches='tight')
 
 
 plt.show()
