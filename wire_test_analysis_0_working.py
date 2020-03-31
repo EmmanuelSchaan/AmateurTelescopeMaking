@@ -38,7 +38,10 @@ depth = D / 6.
 #
 #resBlueArcsec = 1.22 * 400.e-9/(D*1.e-3) * (180.*3600./np.pi)
 #resRedArcsec = 1.22 * 800.e-9/(D*1.e-3) * (180.*3600./np.pi)
-#print "Diffraction limit =", np.round(resBlueArcsec, 2), "arcsec in blue and ", np.round(resRedArcsec, 2), "arcsec in red"
+#print "Diffraction limited Airy disk radius (Rayleigh criterion):"
+#print np.round(resBlueArcsec, 2), "arcsec in blue and ", np.round(resRedArcsec, 2), "arcsec in red"
+#print "Diffraction limited Airy disk diameter:"
+#print np.round(2.*resBlueArcsec, 2), "arcsec in blue and ", np.round(2.*resRedArcsec, 2), "arcsec in red"
 #
 #print ""
 #print "f number =", fNumber
