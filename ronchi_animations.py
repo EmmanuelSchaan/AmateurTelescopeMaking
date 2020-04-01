@@ -45,7 +45,9 @@ depth = D / 6.
 #print "focal length =", lf, "mm =", lf / inchToMm, "inch"
 #print "Min useful magnification, for fully dilated eye pupil (7mm) =", np.round(D/7.,1)
 #print "ie max useful eyepiece focal length =", np.round(7. * fNumber,1), "mm"
-#print "Magnification =", np.round(lf/10.,1), np.round(lf/20.,1), np.round(lf/35.,1), "for 10 20 30mm eyepiece focal length"
+#print "Max useful magnification is 30 * (D/1inch) = ", np.round(30. * D/inchToMm, 1)
+#print "ie min useful eyepiece focal length =", np.round(lf / (30. * D/inchToMm),1), "mm"
+#print "Magnification =", np.round(lf/5.,1), np.round(lf/10.,1), np.round(lf/20.,1), np.round(lf/35.,1), "for 5 10 20 30mm eyepiece focal length"
 
 
 ########################################################################
