@@ -695,7 +695,13 @@ def slopesFromWireTest(RMeas, dZWireMeas, sdZWireMeas):
    return dzMirrorVsPara
 
 
+# infer slopes from the wire positions
 dzMirrorVsPara = slopesFromWireTest(RMeas, dZWireMeas, sdZWireMeas)
+# uncertainties from the measurement
+dzMirrorVsParaHigh = slopesFromWireTest(RMeas, dZWireMeas+sdZWireMeas, sdZWireMeas)
+dzMirrorVsParaLow = slopesFromWireTest(RMeas, dZWireMeas-sdZWireMeas, sdZWireMeas)
+
+
 # !!!test: pretend we got the correct slopes for the parabola
 #dzMirrorVsPara = 0. * dzPara(RMeas, RcBest)
 
@@ -726,7 +732,9 @@ ax=fig.add_subplot(111)
 #
 ax.axhline(0.)
 ax.plot(RMeas*0.1, dZWirePara, 'k--', label=r'Expected')
-ax.plot(RMeas*0.1, dZWireMeas, 'b', label=r'Measured')
+ax.plot(RMeas*0.1, dZWireMeas, 'c', label=r'Measured')
+ax.fill_between(RMeas*0.1, dZWireMeas - sdZWireMeas,
+                           dZWireMeas + sdZWireMeas, edgecolor='', facecolor='c', alpha=0.5)
 #
 # Allowed region to keep the geometric aberration
 # below the diffraction aberration
@@ -803,7 +811,7 @@ plt.show()
 
 
 ########################################################################
-# Compute surface deviation from parabola parabola
+# Compute surface deviation from parabola
 
 
 def integrateSlopeDeviation(dzMirrorVsPara):
@@ -833,6 +841,11 @@ def integrateSlopeDeviation(dzMirrorVsPara):
 RPlot, zMirrorVSPara = integrateSlopeDeviation(dzMirrorVsPara)
 RPlot, zMirrorVSParaTexereau = integrateSlopeDeviation(dzMirrorVsParaTexereau)
 
+# uncertainties from measurement of wire positions
+RPlot, zMirrorVSParaHigh = integrateSlopeDeviation(dzMirrorVsParaHigh)
+RPlot, zMirrorVSParaLow = integrateSlopeDeviation(dzMirrorVsParaLow)
+sZMirrorVSPara = zMirrorVSParaHigh - zMirrorVSParaLow
+
 
 ########################################################################
 # Plot measured surface, compared with circle and parabola
@@ -851,8 +864,9 @@ ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor=
 # Compare circle, parabola and measured profile
 ax.plot(RPlot*0.1, 1.e3 * (zCirc(RPlot, RcBest) - zPara(RPlot, RcBest)), 'k--', label=r'Circle')
 ax.plot(RPlot*0.1, 0. * RPlot, 'k-', label=r'Parabola')
-ax.plot(RPlot*0.1, 1.e3 * zMirrorVSPara, 'b', label=r'measured')
-ax.plot(RPlot*0.1, 1.e3 * zMirrorVSParaTexereau, 'c--', label=r'measured Texereau')
+ax.plot(RPlot*0.1, 1.e3 * zMirrorVSPara, 'c', label=r'measured')
+ax.fill_between(RPlot*0.1, 1.e3 * zMirrorVSParaLow, 1.e3 * zMirrorVSParaHigh, edgecolor='', facecolor='c', alpha=0.5)
+ax.plot(RPlot*0.1, 1.e3 * zMirrorVSParaTexereau, 'b--', label=r'measured Texereau')
 #
 ax.plot(RMeas*0.1, 0.*RMeas, 'go')
 #
@@ -878,8 +892,10 @@ ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor=
 # Compare circle, parabola and measured profile
 ax.plot(RPlot*0.1, 0. * RPlot, 'k--', label=r'Circle')
 ax.plot(RPlot*0.1, 1.e3 * (zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), 'k-', label=r'Parabola')
-ax.plot(RPlot*0.1, 1.e3 * (zMirrorVSPara + zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), 'b', label=r'measured')
-ax.plot(RPlot*0.1, 1.e3 * (zMirrorVSParaTexereau + zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), 'c--', label=r'measured Texereau')
+ax.plot(RPlot*0.1, 1.e3 * (zMirrorVSPara + zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), 'c', label=r'measured')
+ax.fill_between(RPlot*0.1, 1.e3 * (zMirrorVSParaLow + zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), 
+                           1.e3 * (zMirrorVSParaHigh + zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), edgecolor='', facecolor='c', alpha=0.5)
+ax.plot(RPlot*0.1, 1.e3 * (zMirrorVSParaTexereau + zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), 'b--', label=r'measured Texereau')
 #
 ax.plot(RMeas*0.1, 0.*RMeas, 'go')
 #
@@ -945,6 +961,10 @@ def bestFitParabola(zMirrorVsPara):
 # and the corresponding surface deviations
 RcParaBest, zMirrorVSParaBest = bestFitParabola(zMirrorVSPara)
 
+# uncertainty from measurement of the wire position
+RcParaBestHigh, zMirrorVSParaBestHigh = bestFitParabola(zMirrorVSParaHigh)
+RcParaBestLow, zMirrorVSParaBestLow = bestFitParabola(zMirrorVSParaLow)
+
 
 ########################################################################
 
@@ -962,8 +982,14 @@ ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor=
 #
 # Compare circle, parabola and measured profile
 ax.plot(RPlot*0.1, 0. * RPlot, 'k-', label=r'Parabola')
-ax.plot(RPlot*0.1, 1.e3 * zMirrorVSParaBest, 'b', label=r'measured vs closest')
+#
+ax.plot(RPlot*0.1, 1.e3 * zMirrorVSParaBest, 'c', label=r'measured vs closest')
+ax.fill_between(RPlot*0.1, 1.e3 * zMirrorVSParaBestLow,
+                           1.e3 * zMirrorVSParaBestHigh, edgecolor='', facecolor='c', alpha=0.5)
+#
 ax.plot(RPlot*0.1, 1.e3 * zMirrorVSPara, 'b--', label=r'measured vs target')
+ax.fill_between(RPlot*0.1, 1.e3 * zMirrorVSParaLow,
+                           1.e3 * zMirrorVSParaHigh, edgecolor='', facecolor='b', alpha=0.5)
 #
 ax.plot(RMeas*0.1, 0.*RMeas, 'go')
 #
