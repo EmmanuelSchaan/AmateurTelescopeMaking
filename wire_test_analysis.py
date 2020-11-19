@@ -30,28 +30,32 @@ lf = D*fNumber # [mm]
 depth = D / 6.
 
 
-#print "Primary diameter =", D, "mm =", D / inchToMm, "inch"
-#print "Aperture area =", np.round(np.pi*(0.1*D/2.)**2, 1), "cm^2,"
-#print "ie ", np.int((D/7.)**2), "times the area of fully dilated eye pupil (7mm)"
-#print "ie limiting apparent magnitude is", np.round(6 + 2.512*np.log10((D/7.)**2), 1)
-#print "compared to 6 for the naked eye."
-#
-#resBlueArcsec = 1.22 * 400.e-9/(D*1.e-3) * (180.*3600./np.pi)
-#resRedArcsec = 1.22 * 800.e-9/(D*1.e-3) * (180.*3600./np.pi)
-#print "Diffraction limited Airy disk radius (Rayleigh criterion):"
-#print np.round(resBlueArcsec, 2), "arcsec in blue and ", np.round(resRedArcsec, 2), "arcsec in red"
-#print "Diffraction limited Airy disk diameter:"
-#print np.round(2.*resBlueArcsec, 2), "arcsec in blue and ", np.round(2.*resRedArcsec, 2), "arcsec in red"
-#
-#print ""
-#print "f number =", fNumber
-#print "focal length =", lf, "mm =", lf / inchToMm, "inch"
-#print "Min useful magnification, for fully dilated eye pupil (7mm) =", np.round(D/7.,1)
-#print "ie max useful eyepiece focal length =", np.round(7. * fNumber,1), "mm"
-#print "Max useful magnification is 30 * (D/1inch) = ", np.round(30. * D/inchToMm, 1)
-#print "ie min useful eyepiece focal length =", np.round(lf / (30. * D/inchToMm),1), "mm"
-#print "Magnification =", np.round(lf/5.,1), np.round(lf/10.,1), np.round(lf/20.,1), np.round(lf/35.,1), "for 5 10 20 30mm eyepiece focal length"
+########################################################################
+# Mirror specifications
 
+'''
+print "Primary diameter =", D, "mm =", D / inchToMm, "inch"
+print "Aperture area =", np.round(np.pi*(0.1*D/2.)**2, 1), "cm^2,"
+print "ie ", np.int((D/7.)**2), "times the area of fully dilated eye pupil (7mm)"
+print "ie limiting apparent magnitude is", np.round(6 + 2.512*np.log10((D/7.)**2), 1)
+print "compared to 6 for the naked eye."
+
+resBlueArcsec = 1.22 * 400.e-9/(D*1.e-3) * (180.*3600./np.pi)
+resRedArcsec = 1.22 * 800.e-9/(D*1.e-3) * (180.*3600./np.pi)
+print "Diffraction limited Airy disk radius (Rayleigh criterion):"
+print np.round(resBlueArcsec, 2), "arcsec in blue and ", np.round(resRedArcsec, 2), "arcsec in red"
+print "Diffraction limited Airy disk diameter:"
+print np.round(2.*resBlueArcsec, 2), "arcsec in blue and ", np.round(2.*resRedArcsec, 2), "arcsec in red"
+
+print ""
+print "f number =", fNumber
+print "focal length =", lf, "mm =", lf / inchToMm, "inch"
+print "Min useful magnification, for fully dilated eye pupil (7mm) =", np.round(D/7.,1)
+print "ie max useful eyepiece focal length =", np.round(7. * fNumber,1), "mm"
+print "Max useful magnification is 30 * (D/1inch) = ", np.round(30. * D/inchToMm, 1)
+print "ie min useful eyepiece focal length =", np.round(lf / (30. * D/inchToMm),1), "mm"
+print "Magnification =", np.round(lf/5.,1), np.round(lf/10.,1), np.round(lf/20.,1), np.round(lf/35.,1), "for 5 10 20 30mm eyepiece focal length"
+'''
 
 ########################################################################
 # Equations for the circle and parabola, for a given circle radius Rc
@@ -585,35 +589,61 @@ CreateMovie(saveFrame, nFrames, fps, test='Wire', fixedLight=False, fringe=stepF
 ########################################################################
 # Measured wire test offsets, and uncertainties
 
-# 2020/03/06
-testRef = "20200306"
-dZWireMeas = - np.array([0.04 ,0.015, 0., -0.02, -0.04])   # [inches]
-
-## 2020/03/13
-#testRef = "20200313"
-#dZWireMeas = - np.array([])   # [inches]
-
-
-########################################################################
 
 # test case, should correspond to circle
 #dZWireMeas = - np.array([0. ,0., 0., 0., 0.])   # [inches]
 #parTruth = np.zeros(6)
 
-# Uncertainties
-sdZWireMeas = 0.005 * np.ones_like(dZWireMeas)   # [inches]
-
-# convert to mm
-dZWireMeas *= inchToMm # [mm]
-sdZWireMeas *= inchToMm # [mm]
-
 # Expected result for a perfect parabola?
 #dZWireMeas = np.linspace(0., 2. * (D/2.)**2/RcBest, 5)
 #dZWireMeas = np.linspace(0., 10., 5)
 
+
+'''
+# 2020/03/06
+# source and wire move together
+testRef = "20200306wire"
 # Mirror zones to be measured
 RMeas = D/2. * np.array([0.316, 0.548, 0.707, 0.837, 0.949])   # [mm]
 nRMeas = len(RMeas)
+# Measured wire positions
+dZWireMeas = - np.array([0.04 ,0.015, 0., -0.02, -0.04]) * inchToMm  # convert from [inch] to [mm]
+# Uncertainties
+sdZWireMeas = 0.005 * np.ones_like(dZWireMeas) * inchToMm   # convert from [inch] to [mm]
+'''
+
+# 2020/11/17, wire test
+# source is fixed
+testRef = "20201117wire"
+# Mirror zones to be measured
+RMeas = D/2. * np.array([0.316, 0.548, 0.707, 0.837, 0.949])   # [mm]
+nRMeas = len(RMeas)
+# Measured wire positions (median of 6 runs)
+dZWireMeas = - np.array([12.136, 10.0775, 8.612, 7.1605, 5.587 ])  # [mm]
+dZWireMeas -= dZWireMeas.mean()
+# hack: divide by two because fixed source, to go back to moving source case
+dZWireMeas /= 2.
+# Uncertainties (standard deviation on the mean of 6 runs)
+sdZWireMeas = np.array([0.05478375, 0.04309658, 0.02026274, 0.02285421, 0.02721868]) # [mm]
+sdZWireMeas /= 2.
+
+'''
+# 2020/11/17, foucault test
+# source is fixed
+testRef = "20201117foucault"
+# Mirror zones to be measured
+RMeas = D/2. * np.array([0.316, 0.548, 0.707, 0.837, 0.949])   # [mm]
+nRMeas = len(RMeas)
+# Measured wire positions (median of 6 runs)
+dZWireMeas = - np.array([8.0325, 5.4365, 4.236, 2.776, 1.2635])  # [mm]
+dZWireMeas -= dZWireMeas.mean()
+# hack: divide by two because fixed source, to go back to moving source case
+dZWireMeas /= 2.
+# Uncertainties (standard deviation on the mean of 6 runs)
+sdZWireMeas = np.array([0.03917795, 0.05598483, 0.07083657, 0.05153729, 0.03823205]) # [mm]
+sdZWireMeas /= 2.
+'''
+
 
 
 
@@ -713,7 +743,7 @@ ax.set_xlabel(r'$r$ [cm]')
 ax.set_ylabel(r'$z_\text{wire}$ [mm]')
 ax.set_title(r'Wire test positions'+ '\n'+r' (comoving source \& wire)')
 #
-fig.savefig("./figures/wiretest_positions_"+testRef+".pdf", bbox_inches='tight')
+fig.savefig("./figures/test_positions_"+testRef+".pdf", bbox_inches='tight')
 
 plt.show()
 
@@ -735,7 +765,7 @@ ax.legend(loc=1, fontsize='x-small', labelspacing=0.)
 ax.set_xlabel(r'$r$ [cm]')
 ax.set_ylabel(r'Longitudinal aberration'+'\n'+r'at focal point [$\mu$m]')
 #
-fig.savefig("./figures/wiretest_longitudinal_aberration_"+testRef+".pdf", bbox_inches='tight')
+fig.savefig("./figures/test_longitudinal_aberration_"+testRef+".pdf", bbox_inches='tight')
 
 plt.show()
 
@@ -764,7 +794,7 @@ ax.set_xlabel(r'$r$ [cm]')
 ax.set_ylabel(r'Transverse aberration'+'\n'+r'at focal point [$\mu$m]')
 ax.set_title(r'Danjon \& Couder criterion 1' + '\n' + r'Geometric VS diffraction spot')
 #
-fig.savefig("./figures/wiretest_transverse_aberration_"+testRef+".pdf", bbox_inches='tight')
+fig.savefig("./figures/test_transverse_aberration_"+testRef+".pdf", bbox_inches='tight')
 
 plt.show()
 
@@ -831,7 +861,7 @@ ax.set_xlabel(r'$r$ [cm]')
 ax.set_ylabel(r'$z - z_\text{Parabola}$ [$\mu$m]')
 ax.set_title(r'Wire test analysis '+testRef)
 #
-fig.savefig("./figures/wiretest_mirror_vs_parabola_"+testRef+".pdf", bbox_inches='tight')
+fig.savefig("./figures/test_mirror_vs_parabola_"+testRef+".pdf", bbox_inches='tight')
 
 
 fig=plt.figure(1)
@@ -858,7 +888,7 @@ ax.set_xlabel(r'$r$ [cm]')
 ax.set_ylabel(r'$z - z_\text{Circle}$ [$\mu$m]')
 ax.set_title(r'Wire test analysis '+testRef)
 #
-fig.savefig("./figures/wiretest_mirror_vs_circle_"+testRef+".pdf", bbox_inches='tight')
+fig.savefig("./figures/test_mirror_vs_circle_"+testRef+".pdf", bbox_inches='tight')
 
 
 plt.show()
@@ -867,61 +897,6 @@ plt.show()
 ########################################################################
 # Find best-fitting parabola,
 # and show the difference
-
-
-########################################################################
-#!!!! Meaningless to find the best fit parabola at the slope level!!!
-#!!!! should be at the profile level
-
-
-#def dzMirrorVsParaNew(dzMirrorVsPara, RcNew):
-#   '''Take the measured mirror excess slopes, relative to the target parabola,
-#   and convert them int excess slopes relative to the new parabola
-#   '''
-#   lfNew = 0.5 * RcNew
-#   dzParaNew = dzPara(RMeas, RcNew, lfNew)  # slopes of new parabola
-#   dzParaNew -= dzPara(RMeas, RcBest)   # deviation from target parabola
-#   return dzMirrorVsPara - dzParaNew
-#
-#
-#def bestFitParabola(dzMirrorVsPara):
-#   '''Given the measured mirror slopes,
-#   relative to the target parabola,
-#   find the best-fit parabola radius RcParaBest
-#   and the slope differences dzMirrorVsParaBest
-#   with that best fit parabola
-#   '''
-#
-#   def loss(x):
-#      '''x = RcNew
-#      returns the summed squared difference in slopes
-#      between the measurements and the new parabola
-#      '''
-#      RcNew = x[0]
-#      result = dzMirrorVsParaNew(dzMirrorVsPara, RcNew)
-#      result = np.sum(result**2)
-#      return result
-#      
-#   # find the best fit parabola RcBest
-#   x0 = [0]
-#   res = optimize.minimize(lambda x: loss(x), x0, method='Nelder-Mead', tol=1e-8)
-#   print res.x, RcBest
-#
-#   RcParaBest = res.x[0]
-#   dzMirrorVsParaBest = dzMirrorVsParaNew(dzMirrorVsPara, RcParaBest) 
-#
-#   return RcParaBest, dzMirrorVsParaBest
-#
-#
-## get the best fit parabola,
-## and the corresponding measured slope excesses
-#RcParaBest, dzMirrorVsParaBest = bestFitParabola(dzMirrorVsPara)
-#
-## integrate the slopes into the mirror profile
-#RPlot, zMirrorVSParaBest = integrateSlopeDeviation(dzMirrorVsParaBest)
-#
-
-########################################################################
 
 
 def zMirrorVsParaNew(zMirrorVsPara, RcNew):
@@ -987,7 +962,7 @@ ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor=
 #
 # Compare circle, parabola and measured profile
 ax.plot(RPlot*0.1, 0. * RPlot, 'k-', label=r'Parabola')
-ax.plot(RPlot*0.1, 1.e3 * zMirrorVSParaBest, 'b', label=r'measured vs best')
+ax.plot(RPlot*0.1, 1.e3 * zMirrorVSParaBest, 'b', label=r'measured vs closest')
 ax.plot(RPlot*0.1, 1.e3 * zMirrorVSPara, 'b--', label=r'measured vs target')
 #
 ax.plot(RMeas*0.1, 0.*RMeas, 'go')
@@ -997,6 +972,6 @@ ax.set_xlabel(r'$r$ [cm]')
 ax.set_ylabel(r'$z - z_\text{Parabola}$ [$\mu$m]')
 ax.set_title(r'Wire test analysis '+testRef)
 #
-#fig.savefig("./figures/wiretest_mirror_vs_parabola_"+testRef+".pdf", bbox_inches='tight')
+fig.savefig("./figures/test_mirror_vs_closest_parabola_"+testRef+".pdf", bbox_inches='tight')
 
 plt.show()
