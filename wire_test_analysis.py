@@ -100,7 +100,7 @@ def sagittaCirc(Rc):
 ########################################################################
 # Equation for parabola
 
-def zParaOffset(Rc):
+def zParaOffset(Rc, lf=lf):
    """Vertical offset [mm] for the parabola,
    to be tangent to the circle at the desired polar radius.
    Rc: circle radius [mm]
@@ -111,14 +111,14 @@ def zParaOffset(Rc):
    result -= rC**2 / (4.*lf)
    return result
 
-def zFocus(Rc):
+def zFocus(Rc, lf=lf):
    """Height [mm] of the focal point of the parabola,
    given the circle radius Rc [mm]
    """
    result = zParaOffset(Rc) + lf
    return result
 
-def zPara(r, Rc):
+def zPara(r, Rc, lf=lf):
    """Equation for the parabola,
    with vertical offset determined to be tangent to the circle of radius Rc
    """
@@ -126,22 +126,22 @@ def zPara(r, Rc):
    result += r**2 / (4. * lf)
    return result
 
-def dzPara(r, Rc):
+def dzPara(r, Rc, lf=lf):
    """First derivative of the parabola
    """
    result = 2. * r / (4. * lf)
    return result
 
-def d2zPara(r, Rc):
+def d2zPara(r, Rc, lf=lf):
    """Second derivative of the parabola
    """
    result = 2. / (4. * lf)
    return result
 
-def rCurv(r, Rc):
+def rCurv(r, Rc, lf=lf):
    """Radius of curvature of the parabola
    """
-   result = (1. + dzPara(r, Rc)**2)**(3./2.)
+   result = (1. + dzPara(r, Rc, lf=lf)**2)**(3./2.)
    result /= np.abs(d2zPara(r, Rc))
    return result
 
@@ -616,6 +616,8 @@ RMeas = D/2. * np.array([0.316, 0.548, 0.707, 0.837, 0.949])   # [mm]
 nRMeas = len(RMeas)
 
 
+
+
 ########################################################################
 # Infer mirror slopes at the measured zones
 # In principle, the wire position measures the mirror height and slope.
@@ -801,6 +803,7 @@ def integrateSlopeDeviation(dzMirrorVsPara):
 RPlot, zMirrorVSPara = integrateSlopeDeviation(dzMirrorVsPara)
 RPlot, zMirrorVSParaTexereau = integrateSlopeDeviation(dzMirrorVsParaTexereau)
 
+
 ########################################################################
 # Plot measured surface, compared with circle and parabola
 
@@ -862,3 +865,138 @@ plt.show()
 
 ########################################################################
 ########################################################################
+# Find best-fitting parabola,
+# and show the difference
+
+
+########################################################################
+#!!!! Meaningless to find the best fit parabola at the slope level!!!
+#!!!! should be at the profile level
+
+
+#def dzMirrorVsParaNew(dzMirrorVsPara, RcNew):
+#   '''Take the measured mirror excess slopes, relative to the target parabola,
+#   and convert them int excess slopes relative to the new parabola
+#   '''
+#   lfNew = 0.5 * RcNew
+#   dzParaNew = dzPara(RMeas, RcNew, lfNew)  # slopes of new parabola
+#   dzParaNew -= dzPara(RMeas, RcBest)   # deviation from target parabola
+#   return dzMirrorVsPara - dzParaNew
+#
+#
+#def bestFitParabola(dzMirrorVsPara):
+#   '''Given the measured mirror slopes,
+#   relative to the target parabola,
+#   find the best-fit parabola radius RcParaBest
+#   and the slope differences dzMirrorVsParaBest
+#   with that best fit parabola
+#   '''
+#
+#   def loss(x):
+#      '''x = RcNew
+#      returns the summed squared difference in slopes
+#      between the measurements and the new parabola
+#      '''
+#      RcNew = x[0]
+#      result = dzMirrorVsParaNew(dzMirrorVsPara, RcNew)
+#      result = np.sum(result**2)
+#      return result
+#      
+#   # find the best fit parabola RcBest
+#   x0 = [0]
+#   res = optimize.minimize(lambda x: loss(x), x0, method='Nelder-Mead', tol=1e-8)
+#   print res.x, RcBest
+#
+#   RcParaBest = res.x[0]
+#   dzMirrorVsParaBest = dzMirrorVsParaNew(dzMirrorVsPara, RcParaBest) 
+#
+#   return RcParaBest, dzMirrorVsParaBest
+#
+#
+## get the best fit parabola,
+## and the corresponding measured slope excesses
+#RcParaBest, dzMirrorVsParaBest = bestFitParabola(dzMirrorVsPara)
+#
+## integrate the slopes into the mirror profile
+#RPlot, zMirrorVSParaBest = integrateSlopeDeviation(dzMirrorVsParaBest)
+#
+
+########################################################################
+
+
+def zMirrorVsParaNew(zMirrorVsPara, RcNew):
+   '''Take the measured mirror excess slopes, relative to the target parabola,
+   and convert them int excess slopes relative to the new parabola
+   '''
+   lfNew = 0.5 * RcNew
+   zParaNew = zPara(RPlot, RcNew, lfNew)  # slopes of new parabola
+   zParaNew -= zPara(RPlot, RcBest)   # deviation from target parabola
+   result = zMirrorVsPara - zParaNew
+   result -= np.mean(result)  # subtract a constant offset
+   return result
+
+
+
+def bestFitParabola(zMirrorVsPara):
+   '''Given the measured mirror slopes,
+   relative to the target parabola,
+   find the best-fit parabola radius RcParaBest
+   and the slope differences dzMirrorVsParaBest
+   with that best fit parabola
+   '''
+
+   def loss(x):
+      '''x = RcNew
+      returns the summed squared difference in slopes
+      between the measurements and the new parabola
+      '''
+      RcNew = RcBest + x[0]
+      result = zMirrorVsParaNew(zMirrorVsPara, RcNew)
+      #result = np.sum(result**2)
+      result = np.max(np.abs(result))
+      return result
+      
+   # find the best fit parabola RcBest
+   x0 = [0]
+   res = optimize.minimize(lambda x: loss(x), x0, method='Nelder-Mead', tol=1e-8)
+
+   RcParaBest = RcBest + res.x[0]
+   zMirrorVsParaBest = zMirrorVsParaNew(zMirrorVsPara, RcParaBest) 
+
+   return RcParaBest, zMirrorVsParaBest
+
+
+# get the best fit parabola,
+# and the corresponding surface deviations
+RcParaBest, zMirrorVSParaBest = bestFitParabola(zMirrorVSPara)
+
+
+########################################################################
+
+
+fig=plt.figure(0)
+ax=fig.add_subplot(111)
+#
+# Show tolerances for red, green and blue wavelengths:
+# should be wavelength/8 to reach the Rayleigh criterion for a miror,
+# and wavelength/4 for a lens
+tol = 8.
+ax.fill_between(RPlot*0.1, -800.e-3/tol, 800.e-3/tol, edgecolor=None, facecolor='r', alpha=0.2)
+ax.fill_between(RPlot*0.1, -600.e-3/tol, 600.e-3/tol, edgecolor=None, facecolor='g', alpha=0.2)
+ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor='b', alpha=0.2, label=r'$\pm1/8$-wave')
+#
+# Compare circle, parabola and measured profile
+ax.plot(RPlot*0.1, 0. * RPlot, 'k-', label=r'Parabola')
+ax.plot(RPlot*0.1, 1.e3 * zMirrorVSParaBest, 'b', label=r'measured vs best')
+ax.plot(RPlot*0.1, 1.e3 * zMirrorVSPara, 'b--', label=r'measured vs target')
+#
+ax.plot(RMeas*0.1, 0.*RMeas, 'go')
+#
+ax.legend(loc='upper center', fontsize='x-small', labelspacing=0)
+ax.set_xlabel(r'$r$ [cm]')
+ax.set_ylabel(r'$z - z_\text{Parabola}$ [$\mu$m]')
+ax.set_title(r'Wire test analysis '+testRef)
+#
+#fig.savefig("./figures/wiretest_mirror_vs_parabola_"+testRef+".pdf", bbox_inches='tight')
+
+plt.show()
