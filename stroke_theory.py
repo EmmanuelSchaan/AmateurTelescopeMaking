@@ -70,6 +70,7 @@ def plotDiskConfig(s):
 
 
 #plotDiskConfig(R/4.)
+#plotDiskConfig(0.*R)
 
 
 ########################################################################
@@ -167,7 +168,7 @@ def plotPressureField(s, fname=None):
    # pressure field
    # pcolor wants x and y to be edges of cell,
    # ie one more element, and offset by half a cell
-   n = 201
+   n = 201 #51
    # edges
    xEdges = np.linspace(-2.*R, 2.*R, n)
    yEdges = xEdges.copy()
@@ -209,7 +210,8 @@ def plotPressureField(s, fname=None):
    plt.axis('scaled')
    ax.set_xlim((-2.*R, 2.*R))
    ax.set_ylim((-2.*R, 2.*R))
-   ax.set_title(r'Shift = '+str(round(s/R,1))+' radius')
+   #ax.set_title(r'Shift = '+str(round(s/R,2))+' radius')
+   ax.set_title(r'Shift = {:.2f} radius'.format(s/R))
 
 
    # 1d radial averages for the two disks
@@ -239,12 +241,19 @@ def plotPressureField(s, fname=None):
    print p1
    print p2
    # 
-   ax.semilogy(binCenters1, p1, 'r', label=r'Bottom disk')
    ax.semilogy(binCenters2, p2, 'b', label=r'Top disk')
+   ax.semilogy(binCenters1, p1, 'r', label=r'Bottom disk')
    #
-   ax.legend(loc=3, fontsize='x-small', labelspacing=0.1)
+   ax.axhline(weightTopDisk / (np.pi * R**2), color='gray', ls='--', lw=1)
+   #
+   # fix the tick marks, so they don't change
+   # during the animation
+   ax.xaxis.set_ticks(np.array([0., 0.25, 0.5, 0.75, 1.]) * R)
+   #
+   ax.legend(loc=1, fontsize='x-small', labelspacing=0.1, frameon=False)
    ax.set_xlim((0., R))
-   ax.set_xlabel(r'Mirror zone')
+   ax.set_ylim((3., 5.e2))
+   ax.set_xlabel(r'Zone [mirror radius]')
    ax.set_ylabel(r'[arbitrary unit]')
    ax.set_title(r'Pressure')
    # 
@@ -255,9 +264,12 @@ def plotPressureField(s, fname=None):
       fig.clf()
 
 
-#plotPressureField(R/3.)
+#plotPressureField(0.*R)
 #plotPressureField(0.1*R)
+#plotPressureField(R/3.)
 #plotPressureField(0.5*R)
+#plotPressureField(0.95*R)
+#plotPressureField(0.*R, fname='./figures/stroke_theory/test.jpg')
 
 
 
@@ -322,8 +334,8 @@ def saveFrame(iFrame, fname, sMin, sMax):
 
 
 # Generate the movies
-CreateMovie(saveFrame, nFrames, fps, name='thirddiameter', sMin=0.1*R, sMax=R/3.)
-CreateMovie(saveFrame, nFrames, fps, name='70pstroke', sMin=0.1*R, sMax=0.7*R)
+#CreateMovie(saveFrame, nFrames, fps, name='thirddiameter', sMin=0.1*R, sMax=R/3.)
+CreateMovie(saveFrame, nFrames, fps, name='fullstroke', sMin=0.*R, sMax=0.95*R)
 
 
 
