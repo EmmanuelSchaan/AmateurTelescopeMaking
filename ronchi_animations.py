@@ -427,7 +427,6 @@ ax.add_artist(circle)
 # mirror test
 cp=ax.pcolormesh(xxEdges, yyEdges, image, linewidth=0, rasterized=True)
 cp.set_cmap('binary_r')
-ax
 #
 ax.set_title("Ronchi test")
 ax.set_xlabel(r"$f/$"+str(fNumber)+r", $D=$"+str(D)+"mm, $l_f=$"+str(round(lf, 1))+"mm"+"\n"+"Grating \& light move together"+" \n"+r"$\lambda_\text{fringe}=$"+str(lambdaFringe)+r"mm, $\delta z_\text{grating}=$"+str(round(zGrating-zCircCenter(RcBest), 1))+"mm", fontsize=16)

@@ -851,7 +851,7 @@ dZWireMeas /= 2.
 sdZWireMeas = np.array([0.04322904, 0.06484356, 0.05820223, 0.02061553, 0.11712707]) # [mm]
 sdZWireMeas /= 2.
 '''
-
+'''
 # 2020/12/27, wire test, (axis 1)
 # source is fixed
 testRef = "20201227wire"
@@ -866,7 +866,22 @@ dZWireMeas /= 2.
 # Uncertainties (standard deviation on the mean of 6 runs)
 sdZWireMeas = np.array([0.1836224, 0.04292071, 0.03409545, 0.0469541, 0.14497845]) # [mm]
 sdZWireMeas /= 2.
+'''
 
+# 2021/01/09, wire test, (axis 1)
+# source is fixed
+testRef = "20210109wire"
+# Mirror zones to be measured
+RMeas = D/2. * np.array([0.316, 0.548, 0.707, 0.837, 0.949])   # [mm]
+nRMeas = len(RMeas)
+# Measured wire positions (median of 6 runs)
+dZWireMeas = - np.array([17.7325, 15.51875, 14.09375, 12.62625, 11.20375])  # [mm]
+dZWireMeas -= dZWireMeas.mean()
+# hack: divide by two because fixed source, to go back to moving source case
+dZWireMeas /= 2.
+# Uncertainties (standard deviation on the mean of 6 runs)
+sdZWireMeas = np.array([0.06581223, 0.04721957, 0.06435983, 0.03266784, 0.0491649]) # [mm]
+sdZWireMeas /= 2.
 
 
 
@@ -1116,7 +1131,9 @@ ax.fill_between(RPlot*0.1, -400.e-3/tol, 400.e-3/tol, edgecolor=None, facecolor=
 # Compare circle, parabola and measured profile
 ax.plot(RPlot*0.1, 0. * RPlot, 'k--', label=r'Circle')
 ax.plot(RPlot*0.1, 1.e3 * (zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), 'k-', label=r'Parabola')
-ax.plot(RPlot*0.1, 1.e3 * (zMirrorVSPara + zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), 'c', label=r'measured')
+#
+zMirrorVSCirc = zMirrorVSPara + zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)
+ax.plot(RPlot*0.1, 1.e3 * zMirrorVSCirc, 'c', label=r'measured')
 ax.fill_between(RPlot*0.1, 1.e3 * (zMirrorVSParaLow + zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), 
                            1.e3 * (zMirrorVSParaHigh + zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), edgecolor='', facecolor='c', alpha=0.5)
 ax.plot(RPlot*0.1, 1.e3 * (zMirrorVSParaTexereau + zPara(RPlot, RcBest) - zCirc(RPlot, RcBest)), 'b--', label=r'measured Texereau')
