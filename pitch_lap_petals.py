@@ -93,14 +93,20 @@ fig=plt.figure(0, figsize=(6,6))
 ax=plt.subplot(111, projection='polar')
 #
 for iPetal in range(nPetal):
-   plt.plot((iPetal * np.pi/nPetal) * np.ones_like(R), R, 'gray', alpha=0.2, lw=1)
-   plt.plot((iPetal * np.pi/nPetal + np.pi) * np.ones_like(R), R, 'gray', alpha=0.2, lw=1)
    plt.plot(iPetal * 2.*np.pi/nPetal + phiPetalEdge(R), R, 'k', lw=1)
    plt.plot(iPetal * 2.*np.pi/nPetal -phiPetalEdge(R), R, 'k', lw=1)
 #
+# angular grid
+angles = np.linspace(0., 360., (nPetal)*2 + 1)
+lines, labels = plt.thetagrids(angles, labels=None, fmt=None)
+#
+# radial grid
+radii = D/2. * np.linspace(0., 1., 11)
+lines, labels = plt.rgrids(radii, labels=None, angle=22.5, fmt=None)
+#
 ax.set_title("Petal pattern")
 ax.set_rmax(D/2.)
-ax.grid(False)
+#ax.grid(False)
 ax.set_xticklabels([])
 ax.set_yticklabels([])
 #
@@ -139,7 +145,8 @@ y = np.linspace(-D/2., D/2., nX)
 
 xx, yy = np.meshgrid(x, y, indexing='ij')
 rr = np.sqrt(xx**2 + yy**2)
-pphi = np.arctan2(yy, xx) + np.pi
+pphi = np.arctan2(yy, xx) 
+#pphi += np.pi
 
 # pcolor wants x and y to be edges of cell,
 # ie one more element, and offset by half a cell
