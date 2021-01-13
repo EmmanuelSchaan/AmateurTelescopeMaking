@@ -131,7 +131,7 @@ def petalPattern(r, phi, isPitch=True):
    
 
 
-'''
+
 # Cartesian coordinates [mm]
 nX = 501
 x = np.linspace(-D/2., D/2., nX)
@@ -183,4 +183,4 @@ ax.axis('scaled')
 fig.savefig('./figures/pitch_lap_petals/petal_pattern_n'+str(nPetal)+'_'+testRef+'.pdf', bbox_inches='tight')
 
 plt.show()
-'''
+
