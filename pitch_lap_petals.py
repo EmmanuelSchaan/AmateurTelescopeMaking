@@ -55,8 +55,8 @@ ax.set_xlabel(r'$r$ [cm]')
 ax.set_ylabel(r'$z$ deviation from desired figure [$\mu$m]')
 #
 fig.savefig('./figures/pitch_lap_petals/z_deviation_'+testRef+'.pdf', bbox_inches='tight')
-
-plt.show()
+fig.clf()
+#plt.show()
 
 
 ########################################################################
@@ -88,19 +88,26 @@ def phiPetalEdge(r, eMin=0.05, eMax=1.):
    result += phiMin
    return result
 
-'''
+
 fig=plt.figure(0, figsize=(6,6))
-ax=fig.add_subplot(111)
+ax=plt.subplot(111, projection='polar')
 #
-plt.polar(phiPetalEdge(R), R)
+for iPetal in range(nPetal):
+   plt.plot((iPetal * np.pi/nPetal) * np.ones_like(R), R, 'gray', alpha=0.2, lw=1)
+   plt.plot((iPetal * np.pi/nPetal + np.pi) * np.ones_like(R), R, 'gray', alpha=0.2, lw=1)
+   plt.plot(iPetal * 2.*np.pi/nPetal + phiPetalEdge(R), R, 'k', lw=1)
+   plt.plot(iPetal * 2.*np.pi/nPetal -phiPetalEdge(R), R, 'k', lw=1)
 #
 ax.set_title("Petal pattern")
-ax.set_xlim((-D/2., D/2.))
-ax.set_ylim((-D/2., D/2.))
-ax.axis('scaled')
+ax.set_rmax(D/2.)
+ax.grid(False)
+ax.set_xticklabels([])
+ax.set_yticklabels([])
+#
+fig.savefig('./figures/pitch_lap_petals/petal_outline_n'+str(nPetal)+'_'+testRef+'.pdf', bbox_inches='tight')
+fig.clf()
+#plt.show()
 
-plt.show()
-'''
 
 ########################################################################
 # full petal pattern
@@ -124,7 +131,7 @@ def petalPattern(r, phi, isPitch=True):
    
 
 
-
+'''
 # Cartesian coordinates [mm]
 nX = 501
 x = np.linspace(-D/2., D/2., nX)
@@ -176,3 +183,4 @@ ax.axis('scaled')
 fig.savefig('./figures/pitch_lap_petals/petal_pattern_n'+str(nPetal)+'_'+testRef+'.pdf', bbox_inches='tight')
 
 plt.show()
+'''
