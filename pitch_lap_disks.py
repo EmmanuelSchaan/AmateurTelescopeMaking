@@ -20,16 +20,25 @@ D = 10. * inchToMm
 ########################################################################
 # Mirror profile inferred from the wire test
 
-# 20210109wire
+'''
 testRef = "20210117wire"
 rMin = 40.  # [mm]
 rMax = 105. # [mm]
 rCenter = 0.5 * (rMin + rMax)
 diskRadius = 0.5 * (rMax - rMin)
+nDisk = 6
+fullTravel = 2. * (D/2. - rMax)
+'''
 
+testRef = "20210123wire"
+rCenter = 87.5 # [mm]
+diskRadius = 27.5 # [mm]
+rMax = rCenter + diskRadius
+rMin = rCenter - diskRadius
+nDisk = 9
 fullTravel = 2. * (D/2. - rMax)
 
-nDisk = 6
+
 
 ########################################################################
 
