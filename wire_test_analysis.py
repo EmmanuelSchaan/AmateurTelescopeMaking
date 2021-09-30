@@ -1044,7 +1044,7 @@ dZWireMeas /= 2.
 sdZWireMeas = np.array([0.08624094, 0.07474958, 0.0349106, 0.01274755, 0.05937171]) # [mm]
 sdZWireMeas /= 2.
 '''
-
+'''
 # 2021/02/21, wire test, (axis 1)
 # source is fixed
 testRef = "20210221wire"
@@ -1059,7 +1059,38 @@ dZWireMeas /= 2.
 # Uncertainties (standard deviation on the mean of 6 runs)
 sdZWireMeas = np.array([0.14361407, 0.04301163, 0.03102418, 0.06580036, 0.09933372]) # [mm]
 sdZWireMeas /= 2.
+'''
+'''
+# 2021/07/29, wire test, (axis 1)
+# source is fixed
+testRef = "20210729wire"
+# Mirror zones to be measured
+RMeas = D/2. * np.array([0.316, 0.548, 0.707, 0.837, 0.949])   # [mm]
+nRMeas = len(RMeas)
+# Measured wire positions (median of 6 runs)
+dZWireMeas = - np.array([19.11375, 18.84375, 18.21, 17.85125, 17.03125])  # [mm]
+dZWireMeas -= dZWireMeas.mean()
+# hack: divide by two because fixed source, to go back to moving source case
+dZWireMeas /= 2.
+# Uncertainties (standard deviation on the mean of 6 runs)
+sdZWireMeas = np.array([0.1812931, 0.05017158, 0.01695582, 0.03646488, 0.06730295]) # [mm]
+sdZWireMeas /= 2.
+'''
 
+# 2021/09/30, wire test, (axis 1)
+# source is fixed
+testRef = "20210930wire"
+# Mirror zones to be measured
+RMeas = D/2. * np.array([0.316, 0.548, 0.707, 0.837, 0.949])   # [mm]
+nRMeas = len(RMeas)
+# Measured wire positions (median of 6 runs)
+dZWireMeas = - np.array([19.54625, 17.7075, 15.38125, 13.17375, 11.935])  # [mm]
+dZWireMeas -= dZWireMeas.mean()
+# hack: divide by two because fixed source, to go back to moving source case
+dZWireMeas /= 2.
+# Uncertainties (standard deviation on the mean of 6 runs)
+sdZWireMeas = np.array([0.04601291, 0.06259992, 0.04641861, 0.02630946, 0.09604686]) # [mm]
+sdZWireMeas /= 2.
 
 
 
