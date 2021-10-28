@@ -310,7 +310,10 @@ plt.show()
 # Ronchi simulator
 
 
-lambdaFringe = 0.254 # [mm]
+#lambdaFringe = 0.254 # [mm]
+lpiGrating = 75. # number of lines per inch
+lambdaFringe = inchToMm / lpiGrating # [mm]
+
 
 def cosFringe(x, lambdaFringe=lambdaFringe):
    ''' Fringe pattern on the grating
@@ -455,9 +458,9 @@ def CreateMovie(saveFrame, nFrames, fps, test='Ronchi', fixedLight=True, fringe=
    '''
    # file name for the final animation
    if fixedLight:
-      name = test + "_fixedlight"
+      name = test + "_fixedlight_"+str(int(lpiGrating))+"lpi"
    else:
-      name = test + "_samelightgrating" 
+      name = test + "_samelightgrating_"+str(int(lpiGrating))+"lpi" 
 
    print("Generate all frames")
    f = lambda iFrame: saveFrame(iFrame, './figures/_tmp%05d.jpg'%iFrame, test=test, fixedLight=fixedLight)
