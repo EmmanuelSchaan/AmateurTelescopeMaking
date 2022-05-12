@@ -26,28 +26,27 @@ lf = D*fNumber # [mm]
 # Depth of the blank [mm]
 depth = D / 6.
 
+print("Primary diameter =", D, "mm =", D / inchToMm, "inch")
+print("Aperture area =", np.round(np.pi*(0.1*D/2.)**2, 1), "cm^2,")
+print("ie ", int((D/7.)**2), "times the area of fully dilated eye pupil (7mm)")
+print("ie limiting apparent magnitude is", np.round(6 + 2.512*np.log10((D/7.)**2), 1))
+print("compared to 6 for the naked eye.")
 
-#print "Primary diameter =", D, "mm =", D / inchToMm, "inch"
-#print "Aperture area =", np.round(np.pi*(0.1*D/2.)**2, 1), "cm^2,"
-#print "ie ", np.int((D/7.)**2), "times the area of fully dilated eye pupil (7mm)"
-#print "ie limiting apparent magnitude is", np.round(6 + 2.512*np.log10((D/7.)**2), 1)
-#print "compared to 6 for the naked eye."
-#
-#resBlueArcsec = 1.22 * 400.e-9/(D*1.e-3) * (180.*3600./np.pi)
-#resRedArcsec = 1.22 * 800.e-9/(D*1.e-3) * (180.*3600./np.pi)
-#print "Diffraction limited Airy disk radius (Rayleigh criterion):"
-#print np.round(resBlueArcsec, 2), "arcsec in blue and ", np.round(resRedArcsec, 2), "arcsec in red"
-#print "Diffraction limited Airy disk diameter:"
-#print np.round(2.*resBlueArcsec, 2), "arcsec in blue and ", np.round(2.*resRedArcsec, 2), "arcsec in red"
-#
-#print ""
-#print "f number =", fNumber
-#print "focal length =", lf, "mm =", lf / inchToMm, "inch"
-#print "Min useful magnification, for fully dilated eye pupil (7mm) =", np.round(D/7.,1)
-#print "ie max useful eyepiece focal length =", np.round(7. * fNumber,1), "mm"
-#print "Max useful magnification is 30 * (D/1inch) = ", np.round(30. * D/inchToMm, 1)
-#print "ie min useful eyepiece focal length =", np.round(lf / (30. * D/inchToMm),1), "mm"
-#print "Magnification =", np.round(lf/5.,1), np.round(lf/10.,1), np.round(lf/20.,1), np.round(lf/35.,1), "for 5 10 20 30mm eyepiece focal length"
+resBlueArcsec = 1.22 * 400.e-9/(D*1.e-3) * (180.*3600./np.pi)
+resRedArcsec = 1.22 * 800.e-9/(D*1.e-3) * (180.*3600./np.pi)
+print("Diffraction limited Airy disk radius (Rayleigh criterion):")
+print(np.round(resBlueArcsec, 2), "arcsec in blue and ", np.round(resRedArcsec, 2), "arcsec in red")
+print("Diffraction limited Airy disk diameter:")
+print(np.round(2.*resBlueArcsec, 2), "arcsec in blue and ", np.round(2.*resRedArcsec, 2), "arcsec in red")
+
+print("")
+print("f number =", fNumber)
+print("focal length =", lf, "mm =", lf / inchToMm, "inch")
+print("Min useful magnification, for fully dilated eye pupil (7mm) =", np.round(D/7.,1))
+print("ie max useful eyepiece focal length =", np.round(7. * fNumber,1), "mm")
+print("Max useful magnification is 30 * (D/1inch) = ", np.round(30. * D/inchToMm, 1))
+print("ie min useful eyepiece focal length =", np.round(lf / (30. * D/inchToMm),1), "mm")
+print("Magnification =", np.round(lf/5.,1), np.round(lf/10.,1), np.round(lf/20.,1), np.round(lf/35.,1), "for 5 10 20 30mm eyepiece focal length")
 
 
 ########################################################################
@@ -171,15 +170,15 @@ rContactBest = rContact(RcBest)
 alphaBest = rContactBest/(D/2.)
 
 
-print ""
-print "To minimize the volume between sphere and paraboloid,"
-print "the contact point should be at a fraction", np.round(alphaBest, 4), "of the blank radius."
-print "The wisdom is 0.7."
+print("")
+print("To minimize the volume between sphere and paraboloid,")
+print("the contact point should be at a fraction", np.round(alphaBest, 4), "of the blank radius.")
+print("The wisdom is 0.7.")
 
-print "Hence the best circle radius =", np.round(RcBest, 3), "mm =", np.round(RcBest/inchToMm, 3), "inch"
-print "The guess would be twice the focal length, ie", RcGuess, "mm =", np.round(RcGuess/inchToMm, 3), "inch"
+print("Hence the best circle radius =", np.round(RcBest, 3), "mm =", np.round(RcBest/inchToMm, 3), "inch")
+print("The guess would be twice the focal length, ie", RcGuess, "mm =", np.round(RcGuess/inchToMm, 3), "inch")
 
-print "Circle sagitta =", np.round(sagittaCirc(RcBest),5), "mm =", np.round(sagittaCirc(RcBest) / inchToMm,5), "inch"
+print("Circle sagitta =", np.round(sagittaCirc(RcBest),5), "mm =", np.round(sagittaCirc(RcBest) / inchToMm,5), "inch")
 
 
 ########################################################################
@@ -463,7 +462,7 @@ def CreateMovie(saveFrame, nFrames, fps, test='Ronchi', fixedLight=True, fringe=
       name = test + "_samelightgrating_"+str(int(lpiGrating))+"lpi" 
 
    print("Generate all frames")
-   f = lambda iFrame: saveFrame(iFrame, './figures/_tmp%05d.jpg'%iFrame, test=test, fixedLight=fixedLight)
+   f = lambda iFrame: saveFrame(iFrame, './figures/test_simulations/_tmp%05d.jpg'%iFrame, test=test, fixedLight=fixedLight)
    pool = ProcessPool(nodes=3)
    pool.map(f, range(nFrames))
 
@@ -472,19 +471,19 @@ def CreateMovie(saveFrame, nFrames, fps, test='Ronchi', fixedLight=True, fringe=
    # this commands preserves the aspect ratio, rescales the image to fill HD as much as possible,
    # without cropping, then pads the rest with white
    for iFrame in range(nFrames):
-      fname = './figures/_tmp%05d.jpg'%iFrame 
+      fname = './figures/test_simulations/_tmp%05d.jpg'%iFrame 
       #os.system("convert "+fname+" -resize 1280x720 -gravity center -extent 1280x720 -background white "+fname)
       os.system("convert "+fname+" -resize 1000x1000 -gravity center -extent 1000x1000 -background white "+fname)
 
    # delete old animation
-   os.system("rm ./figures/"+name+".mp4")
+   os.system("rm ./figures/test_simulations/"+name+".mp4")
    print("Create new animation")
-   #os.system("ffmpeg -r "+str(fps)+" -i ./figures/_tmp%05d.jpg -s 1280x720 -vcodec libx264 -pix_fmt yuv420p ./figures/ronchi.mp4")
-   os.system("ffmpeg -r "+str(fps)+" -i ./figures/_tmp%05d.jpg -s 1000x1000 -vcodec libx264 -pix_fmt yuv420p ./figures/"+name+".mp4")
+   #os.system("ffmpeg -r "+str(fps)+" -i ./figures/test_simulations/_tmp%05d.jpg -s 1280x720 -vcodec libx264 -pix_fmt yuv420p ./figures/test_simulations/ronchi.mp4")
+   os.system("ffmpeg -r "+str(fps)+" -i ./figures/test_simulations/_tmp%05d.jpg -s 1000x1000 -vcodec libx264 -pix_fmt yuv420p ./figures/test_simulations/"+name+".mp4")
 
 
    # delete images
-   os.system("rm ./figures/_tmp*.jpg")
+   os.system("rm ./figures/test_simulations/_tmp*.jpg")
 
 
 
@@ -504,7 +503,7 @@ def saveFrame(iFrame, fname, test='Ronchi', fixedLight=True, fringe=stepFringe, 
    # Translate iFrame into the physical param of interest
    x = float(iFrame) / (nFrames - 1)
    t = tMin * (1.-x) + tMax * x
-   print "frame="+str(iFrame)+", value="+str(t)
+   print("frame="+str(iFrame)+", value="+str(t))
 
    # Update the image
    zGrating = zCircCenter(RcBest) + t # [mm]
@@ -540,12 +539,10 @@ def saveFrame(iFrame, fname, test='Ronchi', fixedLight=True, fringe=stepFringe, 
    
 
 # Generate the movies
-'''
 # Ronchi, fixed light
 CreateMovie(saveFrame, nFrames, fps, test='Ronchi', fixedLight=True, fringe=stepFringe, nX=1001)
 # Ronchi, light and grating move together
 CreateMovie(saveFrame, nFrames, fps, test='Ronchi', fixedLight=False, fringe=stepFringe, nX=1001)
-'''
 # Foucault, fixed light
 CreateMovie(saveFrame, nFrames, fps, test='Foucault', fixedLight=True, fringe=stepFringe, nX=1001)
 # Foucault, light and grating move together

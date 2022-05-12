@@ -19,27 +19,27 @@ lf = D*fNumber
 depth = D / 6.
 
 
-print "Primary diameter =", D, "mm =", D / inchToMm, "inch"
-print "Aperture area =", np.round(np.pi*(0.1*D/2.)**2, 1), "cm^2,"
-print "ie ", np.int((D/7.)**2), "times the area of fully dilated eye pupil (7mm)"
-print "ie limiting apparent magnitude is", np.round(6 + 2.512*np.log10((D/7.)**2), 1)
-print "compared to 6 for the naked eye."
+print("Primary diameter =", D, "mm =", D / inchToMm, "inch")
+print("Aperture area =", np.round(np.pi*(0.1*D/2.)**2, 1), "cm^2,")
+print("ie ", np.int((D/7.)**2), "times the area of fully dilated eye pupil (7mm)")
+print("ie limiting apparent magnitude is", np.round(6 + 2.512*np.log10((D/7.)**2), 1))
+print("compared to 6 for the naked eye.")
 
 resBlueArcsec = 1.22 * 400.e-9/(D*1.e-3) * (180.*3600./np.pi)
 resRedArcsec = 1.22 * 800.e-9/(D*1.e-3) * (180.*3600./np.pi)
-print "Diffraction limited Airy disk radius (Rayleigh criterion):"
-print np.round(resBlueArcsec, 2), "arcsec in blue and ", np.round(resRedArcsec, 2), "arcsec in red"
-print "Diffraction limited Airy disk diameter:"
-print np.round(2.*resBlueArcsec, 2), "arcsec in blue and ", np.round(2.*resRedArcsec, 2), "arcsec in red"
+print("Diffraction limited Airy disk radius (Rayleigh criterion):")
+print(np.round(resBlueArcsec, 2), "arcsec in blue and ", np.round(resRedArcsec, 2), "arcsec in red")
+print("Diffraction limited Airy disk diameter:")
+print(np.round(2.*resBlueArcsec, 2), "arcsec in blue and ", np.round(2.*resRedArcsec, 2), "arcsec in red")
 
-print ""
-print "f number =", fNumber
-print "focal length =", lf, "mm =", lf / inchToMm, "inch"
-print "Min useful magnification, for fully dilated eye pupil (7mm) =", np.round(D/7.,1)
-print "ie max useful eyepiece focal length =", np.round(7. * fNumber,1), "mm"
-print "Max useful magnification is 30 * (D/1inch) = ", np.round(30. * D/inchToMm, 1)
-print "ie min useful eyepiece focal length =", np.round(lf / (30. * D/inchToMm),1), "mm"
-print "Magnification =", np.round(lf/5.,1), np.round(lf/10.,1), np.round(lf/20.,1), np.round(lf/35.,1), "for 5 10 20 30mm eyepiece focal length"
+print("")
+print("f number =", fNumber)
+print("focal length =", lf, "mm =", lf / inchToMm, "inch")
+print("Min useful magnification, for fully dilated eye pupil (7mm) =", np.round(D/7.,1))
+print("ie max useful eyepiece focal length =", np.round(7. * fNumber,1), "mm")
+print("Max useful magnification is 30 * (D/1inch) = ", np.round(30. * D/inchToMm, 1))
+print("ie min useful eyepiece focal length =", np.round(lf / (30. * D/inchToMm),1), "mm")
+print("Magnification =", np.round(lf/5.,1), np.round(lf/10.,1), np.round(lf/20.,1), np.round(lf/35.,1), "for 5 10 20 30mm eyepiece focal length")
 
 
 
@@ -138,15 +138,15 @@ rContactBest = rContact(RcBest)
 alphaBest = rContactBest/(D/2.)
 
 
-print ""
-print "To minimize the volume between sphere and paraboloid,"
-print "the contact point should be at a fraction", np.round(alphaBest, 4), "of the blank radius."
-print "The wisdom is 0.7."
+print("")
+print("To minimize the volume between sphere and paraboloid,")
+print("the contact point should be at a fraction", np.round(alphaBest, 4), "of the blank radius.")
+print("The wisdom is 0.7.")
 
-print "Hence the best circle radius =", np.round(RcBest, 3), "mm =", np.round(RcBest/inchToMm, 3), "inch"
-print "The guess would be twice the focal length, ie", RcGuess, "mm =", np.round(RcGuess/inchToMm, 3), "inch"
+print("Hence the best circle radius =", np.round(RcBest, 3), "mm =", np.round(RcBest/inchToMm, 3), "inch")
+print("The guess would be twice the focal length, ie", RcGuess, "mm =", np.round(RcGuess/inchToMm, 3), "inch")
 
-print "Circle sagitta =", np.round(sagittaCirc(RcBest),5), "mm =", np.round(sagittaCirc(RcBest) / inchToMm,5), "inch"
+print("Circle sagitta =", np.round(sagittaCirc(RcBest),5), "mm =", np.round(sagittaCirc(RcBest) / inchToMm,5), "inch")
 
 
 ########################################################################

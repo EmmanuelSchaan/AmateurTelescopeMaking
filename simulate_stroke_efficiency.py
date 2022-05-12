@@ -238,8 +238,8 @@ def plotPressureField(s, fname=None):
    minP2 = np.min(p2[np.where(np.isfinite(p2))])
    maxP2 = np.max(p2[np.where(np.isfinite(p2))])
    #p2 = (p2-minP2) / (maxP2-minP2)
-   print p1
-   print p2
+   print(p1)
+   print(p2)
    # 
    ax.semilogy(binCenters2, p2, 'b', label=r'Top disk')
    ax.semilogy(binCenters1, p1, 'r', label=r'Bottom disk')
@@ -269,7 +269,7 @@ def plotPressureField(s, fname=None):
 #plotPressureField(R/3.)
 #plotPressureField(0.5*R)
 #plotPressureField(0.95*R)
-#plotPressureField(0.*R, fname='./figures/stroke_theory/test.jpg')
+#plotPressureField(0.*R, fname='./figures/stroke_simulations/test.jpg')
 
 
 
@@ -288,10 +288,10 @@ def CreateMovie(saveFrame, nFrames, fps, name='stroke_test', sMin=0.5*R, sMax=0.
    then delete the individual frames.
    '''
    print("Generate all frames")
-   f = lambda iFrame: saveFrame(iFrame, './figures/stroke_theory/_tmp%05d.jpg'%iFrame, sMin, sMax)
+   f = lambda iFrame: saveFrame(iFrame, './figures/stroke_simulations/_tmp%05d.jpg'%iFrame, sMin, sMax)
    #pool = ProcessPool(nodes=3)
    #pool.map(f, range(nFrames))
-   map(f, range(nFrames))
+   list(map(f, range(nFrames)))
 
    print("Resize images")
    # resize the images to have even pixel sizes on both dimensions, important for ffmpeg
@@ -303,12 +303,12 @@ def CreateMovie(saveFrame, nFrames, fps, name='stroke_test', sMin=0.5*R, sMax=0.
       os.system("convert "+fname+" -resize 1000x1000 -gravity center -extent 1000x1000 -background white "+fname)
 
    # delete old animation
-   os.system("rm ./figures/stroke_theory/"+name+".mp4")
+   os.system("rm ./figures/stroke_simulations/"+name+".mp4")
    print("Create new animation")
-   os.system("ffmpeg -r "+str(fps)+" -i ./figures/stroke_theory/_tmp%05d.jpg -s 1000x1000 -vcodec libx264 -pix_fmt yuv420p ./figures/stroke_theory/"+name+".mp4")
+   os.system("ffmpeg -r "+str(fps)+" -i ./figures/stroke_simulations/_tmp%05d.jpg -s 1000x1000 -vcodec libx264 -pix_fmt yuv420p ./figures/stroke_simulations/"+name+".mp4")
 
    # delete images
-   os.system("rm ./figures/stroke_theory/_tmp*.jpg")
+   os.system("rm ./figures/stroke_simulations/_tmp*.jpg")
 
 
 
@@ -328,7 +328,7 @@ def saveFrame(iFrame, fname, sMin, sMax):
    # Translate iFrame into the physical param of interest
    x = float(iFrame) / (nFrames - 1)
    s = sMin * (1.-x) + sMax * x
-   print "frame="+str(iFrame)+", value="+str(s)
+   print("frame="+str(iFrame)+", value="+str(s))
 
    plotPressureField(s, fname=fname)
 
